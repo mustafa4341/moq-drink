@@ -62,7 +62,12 @@ export default function TransitionText({
   const y = useTransform(scrollYProgress, [0.3, 0.5, 0.7], [30, 0, -30]);
 
   const isFirstTransition = lines[0] === "Her lezzetin";
+  const isDuplicateTransition = lines[0] === "Dünyalara adım atın.";
   const sectionHeight = isMobile ? (isFirstTransition ? "260px" : "140px") : "50vh";
+
+  if (isMobile && isDuplicateTransition) {
+    return null;
+  }
 
   return (
     <div

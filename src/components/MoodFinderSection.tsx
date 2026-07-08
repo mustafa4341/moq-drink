@@ -216,6 +216,10 @@ export default function MoodFinderSection() {
     }
   };
 
+  if (isMobile === null) {
+    return <section id="mood-finder" className="relative w-full min-h-[50vh] bg-[#F7FAFF]" />;
+  }
+
   return (
     <section
       id="mood-finder"

@@ -321,6 +321,12 @@ export default function InfiniteCarousel() {
     }
   }, []);
 
+  if (isMobile === null) {
+    return (
+      <section id="carousel-section" className="relative py-12 md:py-24 w-full px-6 flex flex-col items-center scene min-h-[300px]" />
+    );
+  }
+
   return (
     <section
       id="carousel-section"

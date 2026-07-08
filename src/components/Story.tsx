@@ -178,6 +178,10 @@ export default function Story() {
     document.getElementById("mood-finder")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  if (isMobile === null) {
+    return <section id="story" className="relative w-full min-h-[50vh] bg-[#EAF6FF]" />;
+  }
+
   if (isMobile) {
     return (
       <section id="story" className="relative w-full py-12 px-6 bg-[#EAF6FF] text-brand-navy flex flex-col items-center">

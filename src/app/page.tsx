@@ -1,25 +1,21 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
-import dynamic from "next/dynamic";
-
 import SmoothScroll from "@/components/SmoothScroll";
 import CinematicLoading from "@/components/CinematicLoading";
+import WorldBackground from "@/components/WorldBackground";
+import AmbientSound from "@/components/AmbientSound";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import TransitionText from "@/components/TransitionText";
+import InfiniteCarousel from "@/components/InfiniteCarousel";
+import ProductWorlds from "@/components/ProductWorlds";
+import Story from "@/components/Story";
 import Vision from "@/components/Vision";
+import MoodFinderSection from "@/components/MoodFinderSection";
 import Philosophy from "@/components/Philosophy";
 import InstagramFeed from "@/components/InstagramFeed";
 import Footer from "@/components/Footer";
-
-// Dynamic Imports for Heavy/Client-only Interactive Components
-const WorldBackground = dynamic(() => import("@/components/WorldBackground"), { ssr: false });
-const AmbientSound = dynamic(() => import("@/components/AmbientSound"), { ssr: false });
-const InfiniteCarousel = dynamic(() => import("@/components/InfiniteCarousel"), { ssr: false });
-const ProductWorlds = dynamic(() => import("@/components/ProductWorlds"), { ssr: false });
-const Story = dynamic(() => import("@/components/Story"), { ssr: false });
-const MoodFinderSection = dynamic(() => import("@/components/MoodFinderSection"), { ssr: false });
 
 /* ═══════════════════════════════════════════════════════════════
    MOQ DRINK — Page Assembly

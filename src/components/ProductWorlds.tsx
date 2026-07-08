@@ -322,6 +322,10 @@ export default function ProductWorlds() {
     setActiveSlide(index);
   };
 
+  if (isMobile === null) {
+    return <section id="worlds-section" className="relative w-full min-h-[50vh] bg-[#f0f7fd]" />;
+  }
+
   if (isMobile) {
     return (
       <section id="worlds-section" className="relative w-full py-12 px-6 flex flex-col items-center scene bg-[#f0f7fd]">

@@ -36,6 +36,10 @@ export default function Footer() {
     document.getElementById("mood-finder")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  if (isMobile === null) {
+    return <footer id="contact" className="relative w-full min-h-[150px] bg-[#242b3e]" />;
+  }
+
   if (isMobile) {
     return (
       <footer

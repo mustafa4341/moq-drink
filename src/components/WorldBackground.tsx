@@ -236,12 +236,20 @@ export default function WorldBackground() {
   // Sun ray position shifts with scroll
   const sunRayX = 50 + scrollProgress * 15;
 
+  if (isMobile === null) {
+    return (
+      <div
+        className="fixed inset-0 w-full h-full pointer-events-none overflow-hidden z-0 select-none bg-[#F7FAFF]"
+      />
+    );
+  }
+
   // Ultra-light mobile background
   if (profile === "mobile") {
     return (
       <div
         className="fixed inset-0 w-full h-full pointer-events-none overflow-hidden z-0 select-none"
-        style={{ ...getBackgroundStyle(), transition: "background 700ms ease-out" }}
+        style={{ ...getBackgroundStyle(), transition: "background 150ms linear" }}
       >
         {/* Layer 2: Cloud Layer Mid (40s) - Simplified (no heavy blur) */}
         <div className="absolute top-[15%] left-0 w-full h-24 opacity-[0.10] overflow-hidden">
@@ -254,7 +262,7 @@ export default function WorldBackground() {
   return (
     <div
       className="fixed inset-0 w-full h-full pointer-events-none overflow-hidden z-0 select-none"
-      style={{ ...getBackgroundStyle(), transition: "background 700ms ease-out" }}
+      style={{ ...getBackgroundStyle(), transition: "background 150ms linear" }}
     >
       {/* ── Layer 1: Cloud Layer Far (55s) ────────────────────── */}
       <div className="absolute top-[6%] left-0 w-full h-28 opacity-[0.18] overflow-hidden">
