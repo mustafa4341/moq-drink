@@ -1,65 +1,162 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState, useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
+
+import SmoothScroll from "@/components/SmoothScroll";
+import CinematicLoading from "@/components/CinematicLoading";
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/Hero";
+import TransitionText from "@/components/TransitionText";
+import Vision from "@/components/Vision";
+import Philosophy from "@/components/Philosophy";
+import InstagramFeed from "@/components/InstagramFeed";
+import Footer from "@/components/Footer";
+
+// Dynamic Imports for Heavy/Client-only Interactive Components
+const WorldBackground = dynamic(() => import("@/components/WorldBackground"), { ssr: false });
+const AmbientSound = dynamic(() => import("@/components/AmbientSound"), { ssr: false });
+const InfiniteCarousel = dynamic(() => import("@/components/InfiniteCarousel"), { ssr: false });
+const ProductWorlds = dynamic(() => import("@/components/ProductWorlds"), { ssr: false });
+const Story = dynamic(() => import("@/components/Story"), { ssr: false });
+const MoodFinderSection = dynamic(() => import("@/components/MoodFinderSection"), { ssr: false });
+
+/* ═══════════════════════════════════════════════════════════════
+   MOQ DRINK — Page Assembly
+   
+   Cinematic Loading (Scene 0)
+     ↓
+   WorldBackground (11 layers, fixed, beneath everything)
+   CustomCursor (fixed, top layer)
+   AmbientSound (fixed toggle, bottom-right)
+   SmoothScroll (Lenis wrapper)
+     ├─ Navbar (fixed, transparent)
+     ├─ Hero (Scene 1)
+     ├─ TransitionText: "Every flavor has its own world."
+     ├─ InfiniteCarousel (Scene 2)
+     ├─ TransitionText: "Enter the worlds."
+     ├─ ProductWorlds (Scene 3 — 4 worlds)
+     ├─ TransitionText: "How it all began..."
+     ├─ Story (Scene 4 — 5 full-screen frames)
+     ├─ Vision (Scene 5)
+     ├─ TransitionText: "What do you feel today?"
+     ├─ MoodFinderSection (Scene 6)
+     ├─ Philosophy (Scene 7)
+     ├─ TransitionText: "Join the world."
+     ├─ InstagramFeed (Scene 8)
+     └─ Footer (Scene 9 — cinematic sunset)
+   ═══════════════════════════════════════════════════════════════ */
 
 export default function Home() {
+  const [isEntered, setIsEntered] = useState(false);
+
+  const handleEntranceComplete = useCallback(() => {
+    setIsEntered(true);
+  }, []);
+
+  // Safety fallback: never get stuck on a blank/white screen.
+  // If the cinematic loading hasn't signalled completion after 4.5s,
+  // force-enter the experience.
+  useEffect(() => {
+    if (isEntered) return;
+    const t = setTimeout(() => setIsEntered(true), 4500);
+    return () => clearTimeout(t);
+  }, [isEntered]);
+
+  const scrollToMoodFinder = useCallback(() => {
+    document.getElementById("mood-finder")?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="relative min-h-screen text-brand-navy selection:bg-brand-blue-bg selection:text-brand-blue-text">
+      {/* Scene 0: Cinematic Loading Sequence */}
+      <CinematicLoading onComplete={handleEntranceComplete} />
+
+      {isEntered && (
+        <>
+          {/* 11-Layer Living Background (always present) */}
+          <WorldBackground />
+
+
+
+          {/* Optional Ambient Sound Toggle */}
+          <AmbientSound />
+
+          {/* Smooth Scroll Momentum Wrapper */}
+          <SmoothScroll>
+            {/* Transparent Editorial Navbar */}
+            <Navbar onMoodFinderClick={scrollToMoodFinder} />
+
+            {/* ── Cinematic Scroll Journey ──────────────────────── */}
+            <main className="w-full flex flex-col">
+
+              {/* Scene 1: Hero — The Arrival */}
+              <Hero />
+
+              {/* Transition: Hero → Carousel */}
+              <TransitionText
+                lines={["Her lezzetin", "kendine ait", "bir dünyası var."]}
+                align="center"
+              />
+
+              {/* Scene 2: Flavor Collection — The Gallery */}
+              <InfiniteCarousel />
+
+              {/* Transition: Carousel → Drink Worlds */}
+              <TransitionText
+                lines={["Dünyalara adım atın."]}
+                align="center"
+              />
+
+              {/* Scene 3: Drink Worlds — The Journey (4 living worlds) */}
+              <ProductWorlds />
+
+              {/* Transition: Drink Worlds → Story */}
+              <TransitionText
+                lines={["Her şey nasıl başladı..."]}
+                align="center"
+                italic
+                warm
+              />
+
+              {/* Scene 4: Story — The Origin (5 full-screen frames) */}
+              <Story />
+
+              {/* No transition between Story → Vision (seamless flow) */}
+
+              {/* Scene 5: Vision — The Statement */}
+              <Vision />
+
+              {/* Transition: Vision → Mood Finder */}
+              <TransitionText
+                lines={["Bugün nasıl hissediyorsun?"]}
+                align="center"
+                glowing
+              />
+
+              {/* Scene 6: Mood Finder — The Heart (Cloud Gateway) */}
+              <MoodFinderSection />
+
+              {/* Scene 7: Philosophy — The Soul */}
+              <Philosophy />
+
+              {/* Transition: Philosophy → Instagram */}
+              <TransitionText
+                lines={["Dünyamıza katılın."]}
+                align="center"
+              />
+
+              {/* Scene 8: Instagram — The Community */}
+              <InstagramFeed />
+
+            </main>
+
+            {/* Scene 9: Footer — The Sunset (Cinematic Ending) */}
+            <Footer />
+
+          </SmoothScroll>
+        </>
+      )}
     </div>
   );
 }

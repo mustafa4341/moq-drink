@@ -1,26 +1,562 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════
+   MOQ DRINK — DESIGN SYSTEM
+   Interactive Digital Experience — Not a website.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Root Design Tokens ────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core Colors */
+  --background: #F7FAFF;
+  --foreground: #1B1F28;
+  --card-bg: rgba(255, 255, 255, 0.72);
+  --border-color: rgba(255, 255, 255, 0.55);
+
+  /* Duration Tokens */
+  --duration-hover: 250ms;
+  --duration-scroll: 800ms;
+  --duration-reveal: 1000ms;
+  --duration-transition: 1200ms;
+  --duration-float: 6s;
+  --duration-cloud: 35s;
+  --duration-leaves: 18s;
+  --duration-reflection: 3s;
+  --duration-loading: 3000ms;
+  --duration-mood-loading: 2500ms;
+
+  /* Spacing Scale */
+  --space-scene-y: clamp(6rem, 10vw, 10rem);
+  --space-scene-x: clamp(1.5rem, 4vw, 3rem);
+
+  /* Radius */
+  --radius-card: 32px;
+  --radius-button: 9999px;
+  --radius-input: 16px;
+  --radius-portal: 9999px 9999px 32px 32px;
 }
 
+/* ── Tailwind Theme Extension ──────────────────────────────── */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-inter), var(--font-manrope);
+
+  --color-brand-blue: #5DA9FF;
+  --color-brand-accent: #7BC7FF;
+  --color-sky-custom: #DCEEFF;
+  --background: #f0f7fd;
+  --foreground: #1a253c;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  /* MOQ Color Palette */
+  --color-brand-blue-bg: #e2f1fd;
+  --color-brand-blue-text: #388be6;
+
+  --color-brand-orange-bg: #fff2df;
+  --color-brand-orange-text: #e58a2b;
+
+  --color-brand-pink-bg: #fce6ec;
+  --color-brand-pink-text: #e04f75;
+
+  --color-brand-green-bg: #e5f5e4;
+  --color-brand-green-text: #73b83e;
+
+  --color-brand-navy: #1a253c;
+  --color-brand-slate: #5e6f88;
+  --color-brand-button: #d8eafa;
+
+  /* Easing Curves */
+  --ease-moq: cubic-bezier(.22, .61, .36, 1);
+  --ease-moq-inout: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-moq-slow: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-moq-dramatic: cubic-bezier(0.87, 0, 0.13, 1);
+
+  /* Animation Definitions */
+  --animate-float-slow: float-slow 6s ease-in-out infinite;
+  --animate-float-medium: float-medium 4.5s ease-in-out infinite;
+  --animate-float-fast: float-fast 3s ease-in-out infinite;
+  --animate-drift-leaves: drift-leaves 18s ease-in-out infinite;
+  --animate-cloud-1: cloud-drift-1 55s linear infinite;
+  --animate-cloud-2: cloud-drift-2 40s linear infinite;
+  --animate-cloud-3: cloud-drift-3 28s linear infinite;
+  --animate-water-ripple: water-ripple 12s ease-in-out infinite;
+  --animate-gleam: gleam-sweep 3s ease-in-out;
+  --animate-shimmer: shimmer 4s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 4s ease-in-out infinite;
+  --animate-petal-fall: petal-fall 12s ease-in-out infinite;
+  --animate-snow-fall: snow-fall 8s linear infinite;
+  --animate-bird-flight: bird-flight 15s ease-in-out infinite;
+  --animate-mist-drift: mist-drift 20s ease-in-out infinite;
+  --animate-sun-pulse: sun-pulse 8s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KEYFRAME ANIMATIONS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Float Animations ──────────────────────────────────────── */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(1.5deg); }
+}
+
+@keyframes float-medium {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(-1deg); }
+}
+
+@keyframes float-fast {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+/* ── Cloud Drift (3 layers at different speeds) ────────────── */
+@keyframes cloud-drift-1 {
+  0% { transform: translateX(-15%); }
+  100% { transform: translateX(115%); }
+}
+
+@keyframes cloud-drift-2 {
+  0% { transform: translateX(-20%); }
+  100% { transform: translateX(120%); }
+}
+
+@keyframes cloud-drift-3 {
+  0% { transform: translateX(-25%); }
+  100% { transform: translateX(125%); }
+}
+
+/* ── Leaf Drift ────────────────────────────────────────────── */
+@keyframes drift-leaves {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(20px, -20px) rotate(12deg); }
+  50% { transform: translate(10px, -35px) rotate(25deg); }
+  75% { transform: translate(-15px, -15px) rotate(10deg); }
+}
+
+/* ── Water Ripple ──────────────────────────────────────────── */
+@keyframes water-ripple {
+  0%, 100% { transform: scaleX(1) translateY(0); opacity: 0.2; }
+  50% { transform: scaleX(1.03) translateY(-3px); opacity: 0.35; }
+}
+
+/* ── Gleam / Reflection Sweep ──────────────────────────────── */
+@keyframes gleam-sweep {
+  0% { transform: translateX(-150%) rotate(25deg); }
+  100% { transform: translateX(250%) rotate(25deg); }
+}
+
+/* ── Shimmer ───────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.02); }
+}
+
+/* ── Pulse Glow ────────────────────────────────────────────── */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+/* ── Petal Fall ────────────────────────────────────────────── */
+@keyframes petal-fall {
+  0% { transform: translate(0, -10%) rotate(0deg); opacity: 0.8; }
+  50% { transform: translate(30px, 50vh) rotate(180deg); opacity: 0.6; }
+  100% { transform: translate(-10px, 110vh) rotate(360deg); opacity: 0; }
+}
+
+/* ── Snow Fall ─────────────────────────────────────────────── */
+@keyframes snow-fall {
+  0% { transform: translate(0, -5%) rotate(0deg); opacity: 0.7; }
+  100% { transform: translate(15px, 105vh) rotate(360deg); opacity: 0; }
+}
+
+/* ── Bird Flight ───────────────────────────────────────────── */
+@keyframes bird-flight {
+  0% { transform: translate(-10vw, 0) scaleX(1); }
+  25% { transform: translate(25vw, -30px) scaleX(0.95); }
+  50% { transform: translate(55vw, 10px) scaleX(1.05); }
+  75% { transform: translate(80vw, -20px) scaleX(0.95); }
+  100% { transform: translate(110vw, 5px) scaleX(1); }
+}
+
+/* ── Mist Drift ────────────────────────────────────────────── */
+@keyframes mist-drift {
+  0%, 100% { transform: translateX(0) scaleX(1); opacity: 0.15; }
+  50% { transform: translateX(5%) scaleX(1.1); opacity: 0.25; }
+}
+
+/* ── Sun Pulse ─────────────────────────────────────────────── */
+@keyframes sun-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.12; }
+  50% { transform: scale(1.08); opacity: 0.2; }
+}
+
+/* ── Rotate Slow ───────────────────────────────────────────── */
+@keyframes rotate-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ── Wave Motion ───────────────────────────────────────────── */
+@keyframes wave-motion {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════════════════ */
+
+html {
+  overflow-x: clip;
 }
 
 body {
-  background: var(--background);
+  background: #F7FAFF;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  cursor: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   TYPOGRAPHY SCALE
+   Strict typographic hierarchy — no ad-hoc sizes
+   ═══════════════════════════════════════════════════════════════ */
+
+.type-hero {
+  font-size: clamp(2.625rem, 6vw + 1rem, 6rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.85;
+  text-transform: uppercase;
+}
+
+.type-scene-title {
+  font-size: clamp(2.25rem, 5vw + 0.5rem, 4.5rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 0.90;
+  text-transform: uppercase;
+}
+
+.type-scene-subtitle {
+  font-size: clamp(0.875rem, 1vw + 0.5rem, 1.125rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+}
+
+.type-label {
+  font-size: clamp(0.5625rem, 0.5vw + 0.3rem, 0.625rem);
+  font-weight: 900;
+  letter-spacing: 0.25em;
+  line-height: 1.0;
+  text-transform: uppercase;
+}
+
+.type-body {
+  font-size: clamp(0.875rem, 0.5vw + 0.6rem, 1rem);
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  line-height: 1.7;
+}
+
+.type-button {
+  font-size: clamp(0.625rem, 0.3vw + 0.5rem, 0.6875rem);
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  line-height: 1.0;
+  text-transform: uppercase;
+}
+
+.type-card-title {
+  font-size: clamp(0.875rem, 0.4vw + 0.6rem, 1rem);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.type-card-body {
+  font-size: clamp(0.6875rem, 0.3vw + 0.5rem, 0.75rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+}
+
+/* Story scene — full-screen text */
+.type-story {
+  font-size: clamp(3rem, 8vw + 1rem, 7rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.85;
+  text-transform: uppercase;
+}
+
+/* Transition text between scenes */
+.type-transition {
+  font-size: clamp(1.5rem, 3vw + 0.5rem, 2.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GLASSMORPHISM SYSTEM
+   3 tiers of glass — unified across the entire experience
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Standard glass (cards, containers) */
+.glass {
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 16px 40px rgba(15, 108, 189, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Elevated glass (portals, featured elements) */
+.glass-portal {
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.30) 0%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  box-shadow:
+    0 32px 80px rgba(15, 108, 189, 0.12),
+    inset 0 0 60px rgba(255, 255, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Subtle glass (inputs, subtle containers) */
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.02);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INTERACTIVE EFFECTS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Gleam reflection on hover */
+.gleam-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.gleam-effect::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-150%) rotate(25deg);
+  transition: none;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.gleam-effect:hover::after {
+  animation: gleam-sweep var(--duration-reflection) var(--ease-moq) forwards;
+}
+
+/* Premium card hover — lift + glow */
+.card-hover {
+  transition:
+    transform var(--duration-hover) var(--ease-moq),
+    box-shadow var(--duration-hover) var(--ease-moq);
+}
+
+.card-hover:hover {
+  transform: translateY(-10px);
+  box-shadow:
+    0 28px 60px rgba(15, 108, 189, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLLBAR & CURSOR
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Hide scrollbars */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Hide default cursor globally */
+a, button, [role="button"], input, select, textarea {
+  cursor: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCENE CONTAINERS
+   Shared structure for all scenes
+   ═══════════════════════════════════════════════════════════════ */
+
+.scene {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.scene-fullscreen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scene-content {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding-left: var(--space-scene-x);
+  padding-right: var(--space-scene-x);
+  position: relative;
+  z-index: 20;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NOISE TEXTURE OVERLAY
+   Adds subtle film grain to the entire experience
+   ═══════════════════════════════════════════════════════════════ */
+
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SELECTION STYLING
+   ═══════════════════════════════════════════════════════════════ */
+
+::selection {
+  background: #e2f1fd;
+  color: #388be6;
+}
+
+/* ── Lenis Smooth Scroll Integration ────────────────────────── */
+html.lenis, html.lenis body {
+  height: auto !important;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+/* ── Cinematic Story Section Custom Keyframes ── */
+@keyframes cloud-drift-slow {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(120vw); }
+}
+@keyframes cloud-drift-fast {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-120vw); }
+}
+@keyframes float-drink {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(-1.5deg); }
+}
+@keyframes float-drink-delayed {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(1.5deg); }
+}
+@keyframes palm-sway {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(4deg) scale(1.02); }
+}
+@keyframes leaf-fall {
+  0% { transform: translateY(-5vh) translateX(0) rotate(0deg); }
+  50% { transform: translateY(50vh) translateX(50px) rotate(180deg); }
+  100% { transform: translateY(105vh) translateX(100px) rotate(360deg); }
+}
+
+/* ── Blossoms Layer CSS Variables ── */
+.blossoms-layer {
+  --particle-color-1: rgba(165, 214, 255, 0.85); /* Default Baby Blue */
+  --particle-color-2: rgba(220, 238, 255, 0.75); /* Default Sky Blue */
+}
+
+/* ── GPU & Layout Performance Optimization ────────────────── */
+.gpu-accelerated {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.optimize-layout {
+  contain: layout paint style;
+  content-visibility: auto;
+  contain-intrinsic-size: 1000px;
+}
+
+/* ── Mobile Viewport Overrides (768px breakpoint) ─────────── */
+@media (max-width: 767px) {
+  body {
+    cursor: auto !important;
+  }
+  
+  a, button, [role="button"], input, select, textarea {
+    cursor: auto !important;
+  }
+
+  .type-hero {
+    font-size: 42px !important;
+    line-height: 1.0 !important;
+    letter-spacing: -0.03em !important;
+  }
+
+  .type-scene-title {
+    font-size: 32px !important;
+    line-height: 1.0 !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  .type-scene-subtitle {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+
+  .type-body {
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Spacing Scale override for mobile (~40px) */
+  :root {
+    --space-scene-y: 2.5rem !important;
+  }
+}
+
