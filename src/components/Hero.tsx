@@ -6,6 +6,12 @@ import { ArrowRight, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Magnetic from "@/components/ui/Magnetic";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 /* ═══════════════════════════════════════════════════════════════
    HERO — Scene 1: The Arrival
@@ -23,7 +29,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 
 export default function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [hasScrolled, setHasScrolled] = useState(false);
+  const scrollHintRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const [fixedHeight, setFixedHeight] = useState<number | string>("95dvh");
 
@@ -50,16 +56,27 @@ export default function Hero() {
     { stiffness: 50, damping: 22 }
   );
 
-  // Hide scroll hint once the user scrolls down
+  // Hide scroll hint once the user scrolls down using GSAP ScrollTrigger (prevents React re-renders)
   useEffect(() => {
-    const handleScroll = () => {
-      if (!hasScrolled && window.scrollY > 50) {
-        setHasScrolled(true);
+    const hint = scrollHintRef.current;
+    if (!hint) return;
+
+    const tween = gsap.to(hint, {
+      opacity: 0,
+      pointerEvents: "none",
+      scrollTrigger: {
+        trigger: "body",
+        start: "top top",
+        end: "60px top",
+        scrub: true,
       }
+    });
+
+    return () => {
+      tween.kill();
+      if (tween.scrollTrigger) tween.scrollTrigger.kill();
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasScrolled]);
+  }, []);
 
   // PERF-3: Mouse parallax event handler — only attaches on desktop
   const handleGlobalMouseMove = (e: React.MouseEvent) => {
@@ -174,12 +191,10 @@ export default function Hero() {
       </div>
 
       {/* ── Scroll Hint ─────────────────────────────────────── */}
-      <motion.div
+      <div
+        ref={scrollHintRef}
         onClick={handleExploreClick}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-2 cursor-pointer z-30 select-none group"
-        animate={{ opacity: hasScrolled ? 0 : 1 }}
-        transition={{ duration: 0.6 }}
-        style={{ pointerEvents: hasScrolled ? "none" : "auto" }}
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-2 cursor-pointer z-30 select-none group scroll-hint"
       >
         <span className="type-label text-brand-slate group-hover:text-brand-blue-text transition-colors duration-300">
           AŞAĞI KAYDIR
@@ -190,7 +205,7 @@ export default function Hero() {
         >
           <ChevronDown className="w-4 h-4 text-brand-slate group-hover:text-brand-blue-text transition-colors duration-300" />
         </motion.div>
-      </motion.div>
+      </div>
     </section>
   );
 }
