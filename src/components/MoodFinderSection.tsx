@@ -1,109 +1,36 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Sparkles, Loader2, Share2, ArrowRight } from "lucide-react";
+import { Sparkles, Share2, ArrowRight, RotateCcw, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
-import Image from "next/image";
 import Magnetic from "@/components/ui/Magnetic";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { computeMood, parseBirthDate, type MoodResult } from "@/lib/mood-algorithm";
+import { type MoqDrink } from "@/lib/drinks";
 
 /* ═══════════════════════════════════════════════════════════════
-   MOOD FINDER — Scene 6: The Heart (Cloud Gateway)
+   MOOD FINDER — Scene 6: "Modunu Bul" Premium Experience
    
-   A glowing gateway opens between clouds. The form lives inside.
-   Pressing "Discover My Mood" = entering the portal.
+   A premium digital ritual where MOQ reads the user's energy
+   and matches them with the drink that represents them today.
    
-   Cloud Gateway:
-     - Two cloud formations on left/right edges
-     - Glowing light beams from center gap
-     - Vertical light column (brand blue/gold gradient)
-     - Form container floating within the light gateway
-     - Ambient particles orbiting
-   
-   Form: First Name, Last Name, Birthday
-     - Premium inputs: transparent bg, bottom-border only, floating labels
-     - CTA: "Discover My Mood" glowing button with pulse animation
-   
-   Loading sequence (2500ms):
-     1. Form slides backward (scale down + opacity)
-     2. Gateway light intensifies
-     3. Liquid morphing shapes in light column
-     4. Particles accelerate inward
-     5. Flash → result card materializes
-   
-   Result card:
-     - Glassmorphic card with flavor-matched accent glow
-     - Mood Name, inspirational message
-     - Details grid: Lucky Color (swatch), Lucky Number, Element, Matched Drink
-     - Product image with float animation
-     - Share button (Web Share API) + "Try Again"
-     - Confetti burst on reveal
+   Flow (6 stages):
+     1. Form       — Name + Surname + Birthday
+     2. Loading    — Cinematic energy reading (typing text)
+     3. Result     — MOQ Seni Seçti + energy map + personality
+     4. Rare msgs  — 5% chance special message
+     5. Mini jokes — Random joke pool
    ═══════════════════════════════════════════════════════════════ */
 
-interface MoodResult {
-  moodName: string;
-  description: string;
-  moodColor: string;
-  colorHex: string;
-  luckyNumber: number;
-  element: string;
-  matchedDrink: string;
-  drinkImage: string;
-  textColor: string;
-  accentGlow: string;
-}
-
-const moodsData: MoodResult[] = [
-  {
-    moodName: "OCEAN SOUL",
-    description: "Sakin, derin ve ilham verici enerjinizle bugün etrafınıza dinginlik yayıyorsunuz. Dengeyi arayan ruhunuz için ferahlık dolu bir gün.",
-    moodColor: "Gök Mavisi",
-    colorHex: "#388be6",
-    luckyNumber: 8,
-    element: "Su",
-    matchedDrink: "BLUE MOJITO",
-    drinkImage: "/images/blue_mojito.png",
-    textColor: "text-brand-blue-text",
-    accentGlow: "rgba(56, 139, 230, 0.3)",
-  },
-  {
-    moodName: "SOLAR ECLIPSE",
-    description: "Bugün içinizdeki macera ve tutku ateşi parlıyor. Egzotik enerjinizle çevrenizdekileri peşinizden sürüklemeye hazırsınız.",
-    moodColor: "Gün Batımı Altını",
-    colorHex: "#e58a2b",
-    luckyNumber: 7,
-    element: "Ateş",
-    matchedDrink: "PASSION BREEZE",
-    drinkImage: "/images/passion_breeze.png",
-    textColor: "text-brand-orange-text",
-    accentGlow: "rgba(229, 138, 43, 0.3)",
-  },
-  {
-    moodName: "WILD BLOSSOM",
-    description: "Tutkulu, yaratıcı ve her ortama renk katan neşeli kişiliğinizle orman meyvelerinin tatlı enerjisi bugün sizinle buluşuyor.",
-    moodColor: "Gül Rengi",
-    colorHex: "#e04f75",
-    luckyNumber: 3,
-    element: "Toprak",
-    matchedDrink: "BERRY BOOST",
-    drinkImage: "/images/berry_boost.png",
-    textColor: "text-brand-pink-text",
-    accentGlow: "rgba(224, 79, 117, 0.3)",
-  },
-  {
-    moodName: "FOREST BREEZE",
-    description: "Doğallıktan yana olan, dengeli ve taze fikirleriyle çevresine ışık saçan bir gün. Zihninizi arındırıp tazelenme vakti.",
-    moodColor: "Limon Yeşili",
-    colorHex: "#73b83e",
-    luckyNumber: 5,
-    element: "Hava",
-    matchedDrink: "LIME FRESH",
-    drinkImage: "/images/lime_fresh.png",
-    textColor: "text-brand-green-text",
-    accentGlow: "rgba(115, 184, 62, 0.3)",
-  },
+const LOADING_MESSAGES = [
+  "Doğum enerjisi bulundu.",
+  "Karakter analiz ediliyor.",
+  "Lezzet eşleşmesi yapılıyor.",
+  "En yakın MOQ bulundu.",
 ];
+
+const LOADING_INTERVAL = 1100; // ms per message
 
 export default function MoodFinderSection() {
   const [step, setStep] = useState<"form" | "loading" | "result">("form");
@@ -111,109 +38,70 @@ export default function MoodFinderSection() {
   const [surname, setSurname] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [result, setResult] = useState<MoodResult | null>(null);
-  
+
   const isMobile = useIsMobile();
   const [mobileStep, setMobileStep] = useState<"welcome" | "name" | "birthday" | "ready">("welcome");
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number | null>(null);
+  // Loading state tracking
+  const [visibleMessages, setVisibleMessages] = useState(0);
 
-  const handleSubmit = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!name || !surname || !birthDate) return;
+  const handleCompute = () => {
+    const parsed = parseBirthDate(birthDate);
+    if (!parsed) return;
 
-    const hashInput = `${name.trim()}${surname.trim()}${birthDate}`.toLowerCase();
-    let hashCode = 0;
-    for (let i = 0; i < hashInput.length; i++) {
-      hashCode = hashInput.charCodeAt(i) + ((hashCode << 5) - hashCode);
-    }
-    const index = Math.abs(hashCode) % moodsData.length;
-    setResult(moodsData[index]);
+    const moodResult = computeMood(name, surname, parsed.month, parsed.day);
+    setResult(moodResult);
     setStep("loading");
   };
 
-  // Canvas vortex loading animation
+  // ── Loading sequence with timed message reveals ──
   useEffect(() => {
-    if (step !== "loading" || !canvasRef.current || !result) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (step !== "loading") return;
 
-    canvas.width = 240;
-    canvas.height = 240;
+    setVisibleMessages(0);
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
-    let angle = 0;
-    let particles: { x: number; y: number; r: number; color: string; speed: number; dist: number }[] = [];
-
-    for (let i = 0; i < 40; i++) {
-      particles.push({
-        x: 120,
-        y: 120,
-        r: Math.random() * 2 + 1,
-        color: i % 2 === 0 ? result.colorHex : "#ffffff",
-        speed: Math.random() * 0.05 + 0.02,
-        dist: Math.random() * 80 + 10,
-      });
+    for (let i = 1; i <= LOADING_MESSAGES.length; i++) {
+      timers.push(
+        setTimeout(() => setVisibleMessages(i), LOADING_INTERVAL * i)
+      );
     }
 
-    let frameCount = 0;
-    const animateVortex = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      angle += 0.04;
-      frameCount++;
-
-      // Glowing vortex center
-      ctx.beginPath();
-      ctx.arc(120, 120, 15 + Math.sin(angle) * 3, 0, Math.PI * 2);
-      ctx.fillStyle = result.colorHex;
-      ctx.shadowColor = result.colorHex;
-      ctx.shadowBlur = 15;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      particles.forEach((p) => {
-        p.dist -= 0.35;
-        if (p.dist < 5) p.dist = Math.random() * 80 + 20;
-
-        const px = 120 + Math.cos(angle * p.speed * 8) * p.dist;
-        const py = 120 + Math.sin(angle * p.speed * 8) * p.dist;
-
-        ctx.beginPath();
-        ctx.arc(px, py, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.fill();
-      });
-
-      if (frameCount < 120) {
-        animationRef.current = requestAnimationFrame(animateVortex);
-      } else {
+    // Transition to result after all messages shown + small delay
+    timers.push(
+      setTimeout(() => {
         setStep("result");
-        confetti({
-          particleCount: 120,
-          spread: 80,
-          origin: { y: 0.65 },
-          colors: [result.colorHex, "#ffffff", "#e58a2b"],
-        });
-      }
-    };
+        if (result) {
+          confetti({
+            particleCount: 120,
+            spread: 80,
+            origin: { y: 0.65 },
+            colors: [result.drink.color, "#ffffff", "#e58a2b"],
+          });
+        }
+      }, LOADING_INTERVAL * LOADING_MESSAGES.length + 600)
+    );
 
-    animateVortex();
-
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    };
+    return () => timers.forEach(clearTimeout);
   }, [step, result]);
 
   const handleShare = () => {
     if (navigator.share && result) {
       navigator.share({
-        title: `MOQ Mood - ${result.moodName}`,
-        text: `Bugünkü MOQ Modum: ${result.moodName}! Senin modun ne?`,
+        title: `MOQ Seni Seçti - ${result.drink.name}`,
+        text: `Bugünün MOQ'u: ${result.drink.emoji} ${result.drink.name}! Senin MOQ'un ne?`,
         url: window.location.href,
       }).catch(() => {});
     } else {
       alert("Sonuç kopyalandı! Sosyal medyada paylaşabilirsin.");
     }
+  };
+
+  const handleReset = () => {
+    setStep("form");
+    setMobileStep("welcome");
+    setResult(null);
+    setVisibleMessages(0);
   };
 
   if (isMobile === null) {
@@ -237,6 +125,23 @@ export default function MoodFinderSection() {
         <div className="absolute right-0 w-[500px] h-64 rounded-full bg-radial from-brand-orange-bg/60 to-transparent blur-3xl animate-mist-drift opacity-40" style={{ animationDelay: "-10s" }} />
         <div className="absolute right-10 top-20 w-[400px] h-48 rounded-full bg-radial from-brand-orange-bg/40 to-transparent blur-3xl animate-mist-drift opacity-30" style={{ animationDelay: "-3s" }} />
       </div>
+
+      {/* Dynamic background color during loading/result — drink-specific atmosphere */}
+      <AnimatePresence>
+        {(step === "loading" || step === "result") && result && (
+          <motion.div
+            key="drink-bg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: step === "loading" ? 0.35 : 0.5 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 2 }}
+            className="absolute inset-0 pointer-events-none bg-color-shift"
+            style={{
+              background: `radial-gradient(circle at 50% 40%, ${result.drink.color}33 0%, transparent 65%)`,
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Center light column */}
       <div
@@ -268,10 +173,12 @@ export default function MoodFinderSection() {
           </p>
         </div>
 
-        {/* Center Glass Portal Form */}
+        {/* Center Glass Portal */}
         <div className="w-full max-w-lg glass border border-white/95 rounded-[2.5rem] p-8 md:p-12 shadow-[0_30px_70px_rgba(229,138,43,0.06)] relative overflow-hidden flex flex-col items-center min-h-[460px]">
           <AnimatePresence mode="wait">
-            {/* ── Form State ─────────────────────────────────── */}
+            {/* ════════════════════════════════════════════════════
+                STAGE 1 — FORM
+               ════════════════════════════════════════════════════ */}
             {step === "form" && (
               <motion.div
                 key="form"
@@ -282,307 +189,570 @@ export default function MoodFinderSection() {
                 className="w-full flex flex-col space-y-6 pt-2"
               >
                 {isMobile ? (
-                  <div className="w-full flex flex-col space-y-5">
-                    {/* Welcome Step */}
-                    {mobileStep === "welcome" && (
-                      <motion.div
-                        key="welcome"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex flex-col items-center text-center space-y-6"
-                      >
-                        <div className="w-12 h-12 rounded-full bg-brand-orange-bg flex items-center justify-center">
-                          <Sparkles className="w-6 h-6 text-brand-orange-text animate-pulse" />
-                        </div>
-                        <p className="text-xs font-semibold text-brand-slate leading-relaxed">
-                          MOQ ile frekansını eşitlemeye hazır mısın? Bilgilerini gir, bugünkü enerjine en uygun MOQ lezzetini ve hayat elementini bul.
-                        </p>
-                        <button
-                          onClick={() => setMobileStep("name")}
-                          className="w-full py-4.5 bg-brand-orange-text text-white font-black text-xs tracking-widest rounded-full shadow-md"
-                        >
-                          BAŞLA
-                        </button>
-                      </motion.div>
-                    )}
-
-                    {/* Name Input Step */}
-                    {mobileStep === "name" && (
-                      <motion.div
-                        key="name"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex flex-col space-y-5"
-                      >
-                        <div className="flex flex-col space-y-2">
-                          <label className="type-label text-brand-navy">ADINIZ</label>
-                          <input
-                            type="text"
-                            required
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Adınız"
-                            className="w-full bg-transparent border-b-2 border-white/60 focus:border-brand-orange-text rounded-none px-1 py-3 text-xs text-brand-navy placeholder:text-brand-slate/50 focus:outline-none transition-all font-bold"
-                          />
-                        </div>
-                        <div className="flex flex-col space-y-2">
-                          <label className="type-label text-brand-navy">SOYADINIZ</label>
-                          <input
-                            type="text"
-                            required
-                            value={surname}
-                            onChange={(e) => setSurname(e.target.value)}
-                            placeholder="Soyadınız"
-                            className="w-full bg-transparent border-b-2 border-white/60 focus:border-brand-orange-text rounded-none px-1 py-3 text-xs text-brand-navy placeholder:text-brand-slate/50 focus:outline-none transition-all font-bold"
-                          />
-                        </div>
-                        <button
-                          disabled={!name.trim() || !surname.trim()}
-                          onClick={() => setMobileStep("birthday")}
-                          className="w-full py-4.5 bg-brand-orange-text text-white font-black text-xs tracking-widest rounded-full shadow-md disabled:opacity-50"
-                        >
-                          DEVAM
-                        </button>
-                      </motion.div>
-                    )}
-
-                    {/* Birthday Step */}
-                    {mobileStep === "birthday" && (
-                      <motion.div
-                        key="birthday"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex flex-col space-y-5"
-                      >
-                        <div className="flex flex-col space-y-2">
-                          <label className="type-label text-brand-navy">DOĞUM TARİHİ</label>
-                          <input
-                            type="date"
-                            required
-                            value={birthDate}
-                            onChange={(e) => setBirthDate(e.target.value)}
-                            className="w-full bg-transparent border-b-2 border-white/60 focus:border-brand-orange-text rounded-none px-1 py-3 text-xs text-brand-navy focus:outline-none transition-all font-bold"
-                          />
-                        </div>
-                        <button
-                          disabled={!birthDate}
-                          onClick={() => setMobileStep("ready")}
-                          className="w-full py-4.5 bg-brand-orange-text text-white font-black text-xs tracking-widest rounded-full shadow-md disabled:opacity-50"
-                        >
-                          DEVAM
-                        </button>
-                      </motion.div>
-                    )}
-
-                    {/* Ready Step */}
-                    {mobileStep === "ready" && (
-                      <motion.div
-                        key="ready"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex flex-col items-center text-center space-y-6"
-                      >
-                        <div className="w-12 h-12 rounded-full bg-brand-orange-bg flex items-center justify-center animate-bounce">
-                          <Sparkles className="w-6 h-6 text-brand-orange-text" />
-                        </div>
-                        <h4 className="text-lg font-black text-brand-navy tracking-tight uppercase">HAZIR MISIN?</h4>
-                        <p className="text-xs font-semibold text-brand-slate leading-relaxed">
-                          Tüm bilgiler hazır! Evrensel frekansını analiz edip MOQ sonucunu görmeye hazır mısın?
-                        </p>
-                        <button
-                          onClick={() => handleSubmit()}
-                          className="w-full py-4.5 bg-brand-orange-text text-white font-black text-xs tracking-widest rounded-full shadow-md"
-                        >
-                          MODUMU GÖSTER
-                        </button>
-                      </motion.div>
-                    )}
-                  </div>
+                  <MobileFormFlow
+                    name={name}
+                    surname={surname}
+                    birthDate={birthDate}
+                    mobileStep={mobileStep}
+                    setName={setName}
+                    setSurname={setSurname}
+                    setBirthDate={setBirthDate}
+                    setMobileStep={setMobileStep}
+                    onSubmit={handleCompute}
+                  />
                 ) : (
-                  <form onSubmit={handleSubmit} className="flex flex-col space-y-5">
-                    {/* First Name */}
-                    <div className="flex flex-col space-y-2">
-                      <label htmlFor="ad" className="type-label text-brand-navy">
-                        AD
-                      </label>
-                      <input
-                        id="ad"
-                        type="text"
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Adınız"
-                        className="w-full bg-transparent border-b-2 border-white/60 focus:border-brand-orange-text rounded-none px-1 py-3 text-xs text-brand-navy placeholder:text-brand-slate/50 focus:outline-none transition-all font-bold"
-                      />
-                    </div>
-
-                    {/* Last Name */}
-                    <div className="flex flex-col space-y-2">
-                      <label htmlFor="soyad" className="type-label text-brand-navy">
-                        SOYAD
-                      </label>
-                      <input
-                        id="soyad"
-                        type="text"
-                        required
-                        value={surname}
-                        onChange={(e) => setSurname(e.target.value)}
-                        placeholder="Soyadınız"
-                        className="w-full bg-transparent border-b-2 border-white/60 focus:border-brand-orange-text rounded-none px-1 py-3 text-xs text-brand-navy placeholder:text-brand-slate/50 focus:outline-none transition-all font-bold"
-                      />
-                    </div>
-
-                    {/* Birthday */}
-                    <div className="flex flex-col space-y-2">
-                      <label htmlFor="dob" className="type-label text-brand-navy">
-                        DOĞUM TARİHİ
-                      </label>
-                      <input
-                        id="dob"
-                        type="date"
-                        required
-                        value={birthDate}
-                        onChange={(e) => setBirthDate(e.target.value)}
-                        className="w-full bg-transparent border-b-2 border-white/60 focus:border-brand-orange-text rounded-none px-1 py-3 text-xs text-brand-navy focus:outline-none transition-all font-bold"
-                      />
-                    </div>
-
-                    {/* CTA Button — Glowing pulse */}
-                    <div className="pt-3">
-                      <Magnetic range={30} strength={0.35}>
-                        <button
-                          type="submit"
-                          className="w-full group flex items-center justify-center space-x-2 bg-brand-orange-text text-white font-black text-xs tracking-widest py-4.5 rounded-full shadow-[0_5px_15px_rgba(229,138,43,0.2)] hover:shadow-[0_10px_25px_rgba(229,138,43,0.35)] transition-all duration-[var(--duration-hover)] hover:scale-[1.02] cursor-pointer animate-pulse-glow"
-                        >
-                          <span>MODUMU BUL</span>
-                          <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" />
-                        </button>
-                      </Magnetic>
-                    </div>
-                  </form>
+                  <DesktopForm
+                    name={name}
+                    surname={surname}
+                    birthDate={birthDate}
+                    setName={setName}
+                    setSurname={setSurname}
+                    setBirthDate={setBirthDate}
+                    onSubmit={handleCompute}
+                  />
                 )}
               </motion.div>
             )}
 
-            {/* ── Loading Vortex State ────────────────────────── */}
+            {/* ════════════════════════════════════════════════════
+                STAGE 2 — LOADING (Cinematic Energy Reading)
+               ════════════════════════════════════════════════════ */}
             {step === "loading" && (
               <motion.div
                 key="loading"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="w-full flex flex-col items-center justify-center space-y-6 py-6"
+                className="w-full flex flex-col items-center justify-center space-y-8 py-8"
               >
-                <canvas ref={canvasRef} className="w-[200px] h-[200px] pointer-events-none select-none" />
-                <div className="flex flex-col items-center space-y-1">
-                  <div className="flex items-center space-x-2 text-brand-navy font-black text-xs tracking-widest uppercase">
-                    <Loader2 className="w-4 h-4 animate-spin text-brand-orange-text" />
-                    <span>Modun Keşfediliyor...</span>
+                {/* MOQ symbol breathing */}
+                <div className="moq-breathe relative">
+                  <div
+                    className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-black"
+                    style={{
+                      background: result
+                        ? `linear-gradient(135deg, ${result.drink.color}40, ${result.drink.color}10)`
+                        : "rgba(229,138,43,0.1)",
+                      boxShadow: result
+                        ? `0 0 40px ${result.drink.color}40`
+                        : "0 0 30px rgba(229,138,43,0.2)",
+                    }}
+                  >
+                    <Sparkles className="w-8 h-8 text-brand-orange-text" />
                   </div>
-                  <span className="text-[10px] text-brand-slate font-bold">
-                    Evrenle frekanslar eşitleniyor...
-                  </span>
+                  {/* Rotating subtle light */}
+                  <div
+                    className="absolute -inset-4 rounded-full opacity-30 pointer-events-none"
+                    style={{
+                      background: result
+                        ? `conic-gradient(from 0deg, transparent, ${result.drink.color}40, transparent)`
+                        : "transparent",
+                      animation: "rotate-slow 4s linear infinite",
+                    }}
+                  />
                 </div>
+
+                {/* Typing status messages */}
+                <div className="flex flex-col space-y-2.5 items-start min-h-[140px] w-full max-w-xs">
+                  {LOADING_MESSAGES.slice(0, visibleMessages).map((msg, i) => (
+                    <motion.div
+                      key={msg}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                      className="flex items-center space-x-2.5"
+                    >
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: result?.drink.color || "#e58a2b" }}
+                      >
+                        <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                      </div>
+                      <span className="text-xs font-bold text-brand-navy">{msg}</span>
+                    </motion.div>
+                  ))}
+                  {/* Current typing indicator */}
+                  {visibleMessages < LOADING_MESSAGES.length && (
+                    <div className="flex items-center space-x-2.5 opacity-50">
+                      <div className="w-5 h-5 rounded-full border-2 border-brand-orange-text/40 animate-pulse" />
+                      <span className="text-xs font-bold text-brand-slate">...</span>
+                    </div>
+                  )}
+                </div>
+
+                <span className="text-[10px] text-brand-slate font-bold tracking-wider uppercase">
+                  MOQ enerjin okunuyor...
+                </span>
               </motion.div>
             )}
 
-            {/* ── Result Card ────────────────────────────────── */}
+            {/* ════════════════════════════════════════════════════
+                STAGE 3 — RESULT
+               ════════════════════════════════════════════════════ */}
             {step === "result" && result && (
-              <motion.div
-                key="result"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ type: "spring", stiffness: 120, damping: 15 }}
-                className="w-full flex flex-col items-center space-y-6 text-center"
-              >
-                <div className="flex items-center space-x-2.5 text-brand-orange-text">
-                  <Sparkles className="w-4 h-4 fill-current animate-pulse" />
-                  <span className="type-label">BUGÜNKÜ MOD SONUCUNUZ</span>
-                </div>
-
-                <h4 className="text-3xl font-black text-brand-navy tracking-tight leading-none uppercase">
-                  {result.moodName}
-                </h4>
-
-                <p className="text-xs font-semibold text-brand-slate leading-relaxed max-w-sm">
-                  {result.description}
-                </p>
-
-                {/* Details Grid */}
-                <div className="w-full grid grid-cols-2 gap-4 bg-white/50 border border-white/60 rounded-3xl p-5 text-left font-sans">
-                  <div>
-                    <span className="text-[8px] font-black text-brand-navy/60 block uppercase tracking-wider">MOD RENGİ</span>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <div
-                        className="w-3 h-3 rounded-full border border-white/60"
-                        style={{ backgroundColor: result.colorHex }}
-                      />
-                      <span className={`text-xs font-black ${result.textColor}`}>{result.moodColor}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-[8px] font-black text-brand-navy/60 block uppercase tracking-wider">ŞANSLI NUMARA</span>
-                    <span className="text-xs font-black text-brand-navy mt-1 block">{result.luckyNumber}</span>
-                  </div>
-                  <div className="pt-2 border-t border-brand-navy/5">
-                    <span className="text-[8px] font-black text-brand-navy/60 block uppercase tracking-wider">ELEMENT</span>
-                    <span className="text-xs font-black text-brand-navy">{result.element}</span>
-                  </div>
-                  <div className="pt-2 border-t border-brand-navy/5">
-                    <span className="text-[8px] font-black text-brand-navy/60 block uppercase tracking-wider">EŞLEŞEN İÇECEK</span>
-                    <span className={`text-xs font-black ${result.textColor}`}>{result.matchedDrink}</span>
-                  </div>
-                </div>
-
-                {/* Matched product display */}
-                <div className="flex items-center space-x-5 py-2">
-                  <div
-                    className="w-20 h-20 rounded-2xl overflow-hidden bg-white/70 border border-white flex items-center justify-center relative shadow-md"
-                    style={{ boxShadow: `0 8px 24px ${result.accentGlow}` }}
-                  >
-                    <Image
-                      src={result.drinkImage}
-                      alt={result.matchedDrink}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                    />
-                  </div>
-                  <div className="text-left">
-                    <span className="text-[9px] font-bold text-brand-slate uppercase tracking-wider block">GÜNÜN İÇECEĞİ</span>
-                    <span className={`text-sm font-black ${result.textColor}`}>{result.matchedDrink}</span>
-                  </div>
-                </div>
-
-                {/* CTA Buttons */}
-                <div className="w-full grid grid-cols-2 gap-4 pt-1">
-                  <Magnetic range={25} strength={0.3}>
-                    <button
-                      onClick={handleShare}
-                      className="w-full flex items-center justify-center space-x-2 bg-brand-navy text-white font-black text-[10px] tracking-widest py-4 rounded-full shadow-lg transition-colors cursor-pointer"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                      <span>PAYLAŞ</span>
-                    </button>
-                  </Magnetic>
-
-                  <Magnetic range={25} strength={0.3}>
-                    <button
-                      onClick={() => {
-                        setStep("form");
-                        setMobileStep("welcome");
-                      }}
-                      className="w-full bg-white/75 hover:bg-white text-brand-navy font-black text-[10px] tracking-widest py-4 rounded-full border border-white transition-colors cursor-pointer"
-                    >
-                      YENİDEN BUL
-                    </button>
-                  </Magnetic>
-                </div>
-              </motion.div>
+              <ResultCard result={result} onShare={handleShare} onReset={handleReset} />
             )}
           </AnimatePresence>
         </div>
       </div>
     </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DESKTOP FORM — Single form, premium inputs
+   ═══════════════════════════════════════════════════════════════ */
+
+function DesktopForm({
+  name, surname, birthDate,
+  setName, setSurname, setBirthDate, onSubmit,
+}: {
+  name: string;
+  surname: string;
+  birthDate: string;
+  setName: (v: string) => void;
+  setSurname: (v: string) => void;
+  setBirthDate: (v: string) => void;
+  onSubmit: () => void;
+}) {
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="flex flex-col space-y-5">
+      <div className="flex flex-col space-y-2">
+        <label htmlFor="ad" className="type-label text-brand-navy">AD</label>
+        <input
+          id="ad"
+          type="text"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Adınız"
+          className="w-full bg-transparent border-b-2 border-white/60 focus:border-brand-orange-text rounded-none px-1 py-3 text-xs text-brand-navy placeholder:text-brand-slate/50 focus:outline-none transition-all font-bold"
+        />
+      </div>
+      <div className="flex flex-col space-y-2">
+        <label htmlFor="soyad" className="type-label text-brand-navy">SOYAD</label>
+        <input
+          id="soyad"
+          type="text"
+          required
+          value={surname}
+          onChange={(e) => setSurname(e.target.value)}
+          placeholder="Soyadınız"
+          className="w-full bg-transparent border-b-2 border-white/60 focus:border-brand-orange-text rounded-none px-1 py-3 text-xs text-brand-navy placeholder:text-brand-slate/50 focus:outline-none transition-all font-bold"
+        />
+      </div>
+      <div className="flex flex-col space-y-2">
+        <label htmlFor="dob" className="type-label text-brand-navy">DOĞUM TARİHİ</label>
+        <input
+          id="dob"
+          type="date"
+          required
+          value={birthDate}
+          onChange={(e) => setBirthDate(e.target.value)}
+          className="w-full bg-transparent border-b-2 border-white/60 focus:border-brand-orange-text rounded-none px-1 py-3 text-xs text-brand-navy focus:outline-none transition-all font-bold"
+        />
+      </div>
+      <div className="pt-3">
+        <Magnetic range={30} strength={0.35}>
+          <button
+            type="submit"
+            className="w-full group flex items-center justify-center space-x-2 bg-brand-orange-text text-white font-black text-xs tracking-widest py-4.5 rounded-full shadow-[0_5px_15px_rgba(229,138,43,0.2)] hover:shadow-[0_10px_25px_rgba(229,138,43,0.35)] transition-all duration-[var(--duration-hover)] hover:scale-[1.02] cursor-pointer pulse-glow-moq"
+          >
+            <span>MODUMU BUL</span>
+            <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" />
+          </button>
+        </Magnetic>
+      </div>
+    </form>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE FORM FLOW — 4 step wizard
+   ═══════════════════════════════════════════════════════════════ */
+
+function MobileFormFlow({
+  name, surname, birthDate, mobileStep,
+  setName, setSurname, setBirthDate, setMobileStep, onSubmit,
+}: {
+  name: string;
+  surname: string;
+  birthDate: string;
+  mobileStep: "welcome" | "name" | "birthday" | "ready";
+  setName: (v: string) => void;
+  setSurname: (v: string) => void;
+  setBirthDate: (v: string) => void;
+  setMobileStep: (s: "welcome" | "name" | "birthday" | "ready") => void;
+  onSubmit: () => void;
+}) {
+  return (
+    <div className="w-full flex flex-col space-y-5">
+      {/* Welcome Step */}
+      {mobileStep === "welcome" && (
+        <motion.div
+          key="welcome"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex flex-col items-center text-center space-y-6"
+        >
+          <div className="w-12 h-12 rounded-full bg-brand-orange-bg flex items-center justify-center">
+            <Sparkles className="w-6 h-6 text-brand-orange-text animate-pulse" />
+          </div>
+          <p className="text-xs font-semibold text-brand-slate leading-relaxed">
+            MOQ ile frekansını eşitlemeye hazır mısın? Bilgilerini gir, bugünkü enerjine en uygun MOQ lezzetini ve hayat elementini bul.
+          </p>
+          <button
+            onClick={() => setMobileStep("name")}
+            className="w-full py-4.5 bg-brand-orange-text text-white font-black text-xs tracking-widest rounded-full shadow-md"
+          >
+            BAŞLA
+          </button>
+        </motion.div>
+      )}
+
+      {/* Name Step */}
+      {mobileStep === "name" && (
+        <motion.div
+          key="name"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex flex-col space-y-5"
+        >
+          <div className="flex flex-col space-y-2">
+            <label className="type-label text-brand-navy">ADINIZ</label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Adınız"
+              className="w-full bg-transparent border-b-2 border-white/60 focus:border-brand-orange-text rounded-none px-1 py-3 text-xs text-brand-navy placeholder:text-brand-slate/50 focus:outline-none transition-all font-bold"
+            />
+          </div>
+          <div className="flex flex-col space-y-2">
+            <label className="type-label text-brand-navy">SOYADINIZ</label>
+            <input
+              type="text"
+              required
+              value={surname}
+              onChange={(e) => setSurname(e.target.value)}
+              placeholder="Soyadınız"
+              className="w-full bg-transparent border-b-2 border-white/60 focus:border-brand-orange-text rounded-none px-1 py-3 text-xs text-brand-navy placeholder:text-brand-slate/50 focus:outline-none transition-all font-bold"
+            />
+          </div>
+          <button
+            disabled={!name.trim() || !surname.trim()}
+            onClick={() => setMobileStep("birthday")}
+            className="w-full py-4.5 bg-brand-orange-text text-white font-black text-xs tracking-widest rounded-full shadow-md disabled:opacity-50"
+          >
+            DEVAM
+          </button>
+        </motion.div>
+      )}
+
+      {/* Birthday Step */}
+      {mobileStep === "birthday" && (
+        <motion.div
+          key="birthday"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex flex-col space-y-5"
+        >
+          <div className="flex flex-col space-y-2">
+            <label className="type-label text-brand-navy">DOĞUM TARİHİ</label>
+            <input
+              type="date"
+              required
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              className="w-full bg-transparent border-b-2 border-white/60 focus:border-brand-orange-text rounded-none px-1 py-3 text-xs text-brand-navy focus:outline-none transition-all font-bold"
+            />
+          </div>
+          <button
+            disabled={!birthDate}
+            onClick={() => setMobileStep("ready")}
+            className="w-full py-4.5 bg-brand-orange-text text-white font-black text-xs tracking-widest rounded-full shadow-md disabled:opacity-50"
+          >
+            DEVAM
+          </button>
+        </motion.div>
+      )}
+
+      {/* Ready Step */}
+      {mobileStep === "ready" && (
+        <motion.div
+          key="ready"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex flex-col items-center text-center space-y-6"
+        >
+          <div className="w-12 h-12 rounded-full bg-brand-orange-bg flex items-center justify-center animate-bounce">
+            <Sparkles className="w-6 h-6 text-brand-orange-text" />
+          </div>
+          <h4 className="text-lg font-black text-brand-navy tracking-tight uppercase">HAZIR MISIN?</h4>
+          <p className="text-xs font-semibold text-brand-slate leading-relaxed">
+            Tüm bilgiler hazır! Evrensel frekansını analiz edip MOQ sonucunu görmeye hazır mısın?
+          </p>
+          <button
+            onClick={onSubmit}
+            className="w-full py-4.5 bg-brand-orange-text text-white font-black text-xs tracking-widest rounded-full shadow-md"
+          >
+            MODUMU GÖSTER
+          </button>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESULT CARD — "MOQ Seni Seçti" + Energy Map + Personality
+   ═══════════════════════════════════════════════════════════════ */
+
+function ResultCard({
+  result,
+  onShare,
+  onReset,
+}: {
+  result: MoodResult;
+  onShare: () => void;
+  onReset: () => void;
+}) {
+  const { drink, personalityIndex, energy, showRareMessage, rareMessage, miniJoke } = result;
+  const personalityText = drink.personalities[personalityIndex] || drink.personalities[0];
+
+  return (
+    <motion.div
+      key="result"
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: "spring", stiffness: 120, damping: 15 }}
+      className="w-full flex flex-col items-center space-y-6 text-center"
+    >
+      {/* ── "MOQ Seni Seçti" Header ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="flex items-center space-x-2"
+        style={{ color: drink.color }}
+      >
+        <Sparkles className="w-4 h-4 fill-current animate-pulse" />
+        <span className="type-label">✨ MOQ SENİ SEÇTİ</span>
+      </motion.div>
+
+      {/* ── Drink Name (huge, with glow) ── */}
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.35, type: "spring", stiffness: 140, damping: 12 }}
+        className="flex flex-col items-center space-y-1"
+      >
+        <span className="text-5xl" style={{ filter: `drop-shadow(0 4px 12px ${drink.glowColor})` }}>
+          {drink.emoji}
+        </span>
+        <h4
+          className="text-3xl font-black tracking-tight leading-none uppercase name-glow"
+          style={{ color: drink.color, ["--glow-color" as string]: drink.glowColor }}
+        >
+          {drink.name}
+        </h4>
+      </motion.div>
+
+      {/* ── Placeholder Drink Image Area ── */}
+      {/* Kullanıcı görsel ekleyince: src/lib/drinks.ts içindeki image path'i güncelle */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.5 }}
+        className="w-24 h-24 rounded-2xl overflow-hidden flex items-center justify-center relative placeholder-shimmer"
+        style={{
+          background: drink.gradient,
+          boxShadow: `0 12px 30px ${drink.glowColor}`,
+        }}
+      >
+        <span className="text-4xl opacity-40">{drink.emoji}</span>
+      </motion.div>
+
+      {/* ── Energy Map (Enerji Haritası) ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.65 }}
+        className="w-full bg-white/50 border border-white/60 rounded-3xl p-5 text-left space-y-3"
+      >
+        <span className="text-[8px] font-black text-brand-navy/60 block uppercase tracking-wider">
+          ENERJİ HARİTAN
+        </span>
+        <EnergyBar emoji="❤️" label="Cesaret" value={energy.cesaret} color="#e04f75" delay={0} />
+        <EnergyBar emoji="🌿" label="Dinginlik" value={energy.dinginlik} color="#73b83e" delay={0.15} />
+        <EnergyBar emoji="☀️" label="Neşe" value={energy.nese} color="#f0a030" delay={0.3} />
+        <EnergyBar emoji="🌊" label="Ferahlık" value={energy.ferahlık} color="#388be6" delay={0.45} />
+      </motion.div>
+
+      {/* ── Personality Text ── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        className="text-left w-full space-y-3"
+      >
+        <p className="text-xs font-semibold text-brand-navy leading-relaxed whitespace-pre-line">
+          {personalityText}
+        </p>
+        {/* Drink-specific joke */}
+        <div className="flex items-start space-x-2 bg-white/40 rounded-2xl p-3 border border-white/50">
+          <span className="text-sm">😏</span>
+          <p className={`text-[11px] font-bold ${drink.textColor} leading-relaxed`}>
+            {drink.joke}
+          </p>
+        </div>
+      </motion.div>
+
+      {/* ── Drink Details Grid ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.95 }}
+        className="w-full grid grid-cols-2 gap-4 text-left"
+      >
+        <div className="bg-white/40 rounded-2xl p-4 border border-white/50">
+          <span className="text-[8px] font-black text-brand-navy/60 block uppercase tracking-wider">
+            DÜNYA
+          </span>
+          <span className={`text-xs font-black ${drink.textColor} mt-1 block`}>
+            {drink.worldName}
+          </span>
+        </div>
+        <div className="bg-white/40 rounded-2xl p-4 border border-white/50">
+          <span className="text-[8px] font-black text-brand-navy/60 block uppercase tracking-wider">
+            İÇİNDEKİLER
+          </span>
+          <span className="text-[10px] font-bold text-brand-navy mt-1 block leading-relaxed">
+            {drink.ingredients.join(" • ")}
+          </span>
+        </div>
+      </motion.div>
+
+      {/* ── Rare Message (5% chance or easter egg) ── */}
+      {showRareMessage && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 1.1, type: "spring" }}
+          className="w-full rounded-2xl p-4 border"
+          style={{
+            background: `${drink.color}15`,
+            borderColor: `${drink.color}40`,
+          }}
+        >
+          <p className={`text-[11px] font-bold leading-relaxed whitespace-pre-line ${drink.textColor}`}>
+            {rareMessage}
+          </p>
+        </motion.div>
+      )}
+
+      {/* ── Mini Joke (random from pool) ── */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.25 }}
+        className="text-[10px] text-brand-slate italic font-medium leading-relaxed"
+      >
+        {miniJoke}
+      </motion.p>
+
+      {/* ── CTA Buttons ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.4 }}
+        className="w-full grid grid-cols-3 gap-3 pt-1"
+      >
+        <Magnetic range={25} strength={0.3}>
+          <button
+            className="w-full flex items-center justify-center space-x-1.5 text-white font-black text-[10px] tracking-widest py-3.5 rounded-full shadow-lg transition-colors"
+            style={{ backgroundColor: drink.color }}
+          >
+            <ArrowRight className="w-3.5 h-3.5" />
+            <span>DENE</span>
+          </button>
+        </Magnetic>
+
+        <Magnetic range={25} strength={0.3}>
+          <button
+            onClick={onShare}
+            className="w-full flex items-center justify-center space-x-1.5 bg-brand-navy text-white font-black text-[10px] tracking-widest py-3.5 rounded-full shadow-lg transition-colors"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>PAYLAŞ</span>
+          </button>
+        </Magnetic>
+
+        <Magnetic range={25} strength={0.3}>
+          <button
+            onClick={onReset}
+            className="w-full flex items-center justify-center space-x-1.5 bg-white/75 hover:bg-white text-brand-navy font-black text-[10px] tracking-widest py-3.5 rounded-full border border-white transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>TEKRAR</span>
+          </button>
+        </Magnetic>
+      </motion.div>
+
+      {/* ── Friend Invite CTA ── */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.6 }}
+        className="text-[10px] text-brand-slate font-medium pt-1"
+      >
+        Peki arkadaşının MOQ'u ne çıkacak? QR'ı onunla paylaş. 😄
+      </motion.p>
+    </motion.div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ENERGY BAR — Animated fill bar for energy map
+   ═══════════════════════════════════════════════════════════════ */
+
+function EnergyBar({
+  emoji,
+  label,
+  value,
+  color,
+  delay,
+}: {
+  emoji: string;
+  label: string;
+  value: number;
+  color: string;
+  delay: number;
+}) {
+  return (
+    <div className="flex items-center space-x-3">
+      <span className="text-sm flex-shrink-0">{emoji}</span>
+      <div className="flex-1">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[10px] font-black text-brand-navy uppercase tracking-wider">
+            {label}
+          </span>
+          <span className="text-[10px] font-black" style={{ color }}>
+            %{Math.round(value)}
+          </span>
+        </div>
+        <div className="h-1.5 rounded-full bg-brand-navy/10 overflow-hidden">
+          <div
+            className="energy-bar-fill h-full rounded-full"
+            style={{
+              background: color,
+              ["--bar-target" as string]: `${value}%`,
+              ["--bar-delay" as string]: `${delay}s`,
+            }}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
