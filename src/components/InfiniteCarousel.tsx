@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import { PRODUCTS, type Drink } from "@/lib/product-data";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 /* ═══════════════════════════════════════════════════════════════
    INFINITE CAROUSEL — Scene 2: Flavor Gallery (The Collection)
@@ -104,8 +105,6 @@ function MobileProductCard({ item, onClick }: { item: Drink; onClick: (id: strin
       className="w-[170px] h-[250px] rounded-[1.8rem] flex flex-col justify-between p-4 relative overflow-hidden border border-white/40 shadow-[0_8px_20px_rgba(15,108,189,0.02)] cursor-pointer"
       style={{
         background: item.bgStyle,
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
       }}
     >
       {/* Card Header */}
@@ -147,6 +146,7 @@ interface InfiniteCarouselProps {
 
 export default function InfiniteCarousel({ onDrinkClick = () => {} }: InfiniteCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   const tweenRef = useRef<gsap.core.Tween | null>(null);
 
   // Dragging state
@@ -279,42 +279,46 @@ export default function InfiniteCarousel({ onDrinkClick = () => {} }: InfiniteCa
           </p>
         </div>
 
-        {/* Mobile View (Statically Rendered, Hidden on Desktop via CSS) */}
-        <div className="flex flex-col items-center space-y-8 w-full md:hidden">
-          <div className="grid grid-cols-2 gap-4 justify-items-center w-full max-w-[360px]">
-            {PRODUCTS.map((item) => (
-              <MobileProductCard key={item.id} item={item} onClick={onDrinkClick} />
-            ))}
+        {/* Mobile View */}
+        {isMobile && (
+          <div className="flex flex-col items-center space-y-8 w-full">
+            <div className="grid grid-cols-2 gap-4 justify-items-center w-full max-w-[360px]">
+              {PRODUCTS.map((item) => (
+                <MobileProductCard key={item.id} item={item} onClick={onDrinkClick} />
+              ))}
+            </div>
+            {/* Mobile Separator */}
+            <div className="flex items-center justify-center space-x-4 w-full py-4 opacity-50">
+              <div className="h-[1px] bg-brand-slate/20 w-12" />
+              <span className="text-[10px] font-black tracking-widest text-brand-slate uppercase">
+                Dünyalara Adım Atın
+              </span>
+              <div className="h-[1px] bg-brand-slate/20 w-12" />
+            </div>
           </div>
-          {/* Mobile Separator */}
-          <div className="flex items-center justify-center space-x-4 w-full py-4 opacity-50">
-            <div className="h-[1px] bg-brand-slate/20 w-12" />
-            <span className="text-[10px] font-black tracking-widest text-brand-slate uppercase">
-              Dünyalara Adım Atın
-            </span>
-            <div className="h-[1px] bg-brand-slate/20 w-12" />
-          </div>
-        </div>
+        )}
 
-        {/* Desktop View (Statically Rendered, Hidden on Mobile via CSS) */}
-        <div
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onMouseDown={(e) => handleDragStart(e.clientX)}
-          onMouseMove={(e) => handleDragMove(e.clientX)}
-          onMouseUp={handleDragEnd}
-          onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
-          onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
-          onTouchEnd={handleDragEnd}
-          data-drag-hint="true"
-          className="infinite-carousel w-full overflow-hidden cursor-grab active:cursor-grabbing py-6 flex hidden md:block"
-        >
-          <div ref={trackRef} className="flex space-x-8 will-change-transform">
-            {itemsList.map((item, index) => (
-              <ProductCard key={`${item.id}-${index}`} item={item} />
-            ))}
+        {/* Desktop View */}
+        {isMobile === false && (
+          <div
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onMouseDown={(e) => handleDragStart(e.clientX)}
+            onMouseMove={(e) => handleDragMove(e.clientX)}
+            onMouseUp={handleDragEnd}
+            onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+            onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+            onTouchEnd={handleDragEnd}
+            data-drag-hint="true"
+            className="infinite-carousel w-full overflow-hidden cursor-grab active:cursor-grabbing py-6 flex"
+          >
+            <div ref={trackRef} className="flex space-x-8 will-change-transform">
+              {itemsList.map((item, index) => (
+                <ProductCard key={`${item.id}-${index}`} item={item} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

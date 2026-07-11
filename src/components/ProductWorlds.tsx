@@ -296,9 +296,17 @@ function WorldSection({ world }: { world: WorldConfig }) {
   );
 }
 
+import { useIsMobile } from "@/hooks/useIsMobile";
+
 export default function ProductWorlds() {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return null;
+  }
+
   return (
-    <section id="worlds-section" className="relative w-full overflow-hidden scene hidden md:block">
+    <section id="worlds-section" className="relative w-full overflow-hidden scene">
       {worldsData.map((world) => (
         <WorldSection key={world.id} world={world} />
       ))}
