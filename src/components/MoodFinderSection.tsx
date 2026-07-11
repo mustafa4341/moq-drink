@@ -350,7 +350,7 @@ function DesktopForm({
         />
       </div>
       <div className="pt-3">
-        <Magnetic range={30} strength={0.35}>
+        <Magnetic range={30} strength={0.35} className="w-full block">
           <button
             type="submit"
             className="w-full group flex items-center justify-center space-x-2 bg-brand-orange-text text-white font-black text-xs tracking-widest py-4.5 rounded-full shadow-[0_5px_15px_rgba(229,138,43,0.2)] hover:shadow-[0_10px_25px_rgba(229,138,43,0.35)] transition-all duration-[var(--duration-hover)] hover:scale-[1.02] cursor-pointer pulse-glow-moq"
