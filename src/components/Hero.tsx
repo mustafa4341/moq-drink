@@ -5,6 +5,7 @@ import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Magnetic from "@/components/ui/Magnetic";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 /* ═══════════════════════════════════════════════════════════════
    HERO — Scene 1: The Arrival
@@ -23,8 +24,9 @@ import Magnetic from "@/components/ui/Magnetic";
 export default function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hasScrolled, setHasScrolled] = useState(false);
+  const isMobile = useIsMobile();
 
-  // Parallax coordinates from mouse movement
+  // Parallax coordinates from mouse movement — PERF-3: disabled on mobile
   const pX = useMotionValue(0);
   const pY = useMotionValue(0);
 
@@ -49,7 +51,9 @@ export default function Hero() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [hasScrolled]);
 
+  // PERF-3: Mouse parallax event handler — only attaches on desktop
   const handleGlobalMouseMove = (e: React.MouseEvent) => {
+    if (isMobile) return; // Guard: mobile never processes mouse parallax
     const width = window.innerWidth;
     const height = window.innerHeight;
     pX.set(e.clientX / width - 0.5);
@@ -69,11 +73,12 @@ export default function Hero() {
       id="home"
       ref={containerRef}
       onMouseMove={handleGlobalMouseMove}
-      className="relative h-[95vh] lg:h-screen w-full flex items-center justify-center px-6 md:px-12 overflow-hidden z-20 bg-white"
+      className="relative h-[95dvh] lg:h-screen w-full flex items-center justify-center px-6 md:px-12 overflow-hidden z-20 bg-white"
     >
       {/* ── 100% Visual Match Background Image with Mouse Parallax ── */}
+      {/* PERF-3: Parallax transform only applied on desktop */}
       <motion.div
-        style={{
+        style={isMobile ? { scale: 1.04 } : {
           x: bgTranslateX,
           y: bgTranslateY,
           scale: 1.04, // slightly scaled up to support parallax edges without clipping

@@ -107,31 +107,26 @@ function getDayEnergy(day: number): DayEnergy {
 /**
  * Factor 1: Name Hash (weight 30%)
  * Creates a unique score distribution per person.
+ * Returns RAW 0-100 score; weight applied at aggregation.
  */
 function scoreByNameHash(nameHash: number): Record<string, number> {
   const scores: Record<string, number> = {};
   for (const drink of MOQ_DRINKS) {
-    // Use different bits of the hash for each drink
     const seed = hashString(`${nameHash}_${drink.id}_score`);
-    // Normalize to 0-30 range
-    scores[drink.id] = (seed % 100) / 100 * 30;
+    scores[drink.id] = (seed % 100); // raw 0-100
   }
   return scores;
 }
 
 /**
  * Factor 2: Birth Season (weight 25%)
- * Favored drinks get higher scores.
+ * Favored drinks get higher raw scores.
  */
 function scoreBySeason(season: string): Record<string, number> {
   const favorites = SEASON_FAVORITES[season] || [];
   const scores: Record<string, number> = {};
   for (const drink of MOQ_DRINKS) {
-    if (favorites.includes(drink.id)) {
-      scores[drink.id] = 25;
-    } else {
-      scores[drink.id] = 5;
-    }
+    scores[drink.id] = favorites.includes(drink.id) ? 100 : 20; // raw
   }
   return scores;
 }
@@ -144,8 +139,7 @@ function scoreByMonth(month: number): Record<string, number> {
   const scores: Record<string, number> = {};
   for (const drink of MOQ_DRINKS) {
     const seed = hashString(`month_${month}_drink_${drink.id}_boost`);
-    // Normalize to 5-20 range
-    scores[drink.id] = 5 + (seed % 100) / 100 * 15;
+    scores[drink.id] = 25 + (seed % 75); // raw 25-100
   }
   return scores;
 }
@@ -159,11 +153,7 @@ function scoreByDay(day: number): Record<string, number> {
   const favorites = ENERGY_FAVORITES[energy];
   const scores: Record<string, number> = {};
   for (const drink of MOQ_DRINKS) {
-    if (favorites.includes(drink.id)) {
-      scores[drink.id] = 15;
-    } else {
-      scores[drink.id] = 4;
-    }
+    scores[drink.id] = favorites.includes(drink.id) ? 100 : 25; // raw
   }
   return scores;
 }
@@ -177,7 +167,7 @@ function scoreBySecretSeed(): Record<string, number> {
   const scores: Record<string, number> = {};
   for (const drink of MOQ_DRINKS) {
     const s = hashString(`${seedHash}_secret_${drink.id}_moq`);
-    scores[drink.id] = (s % 100) / 100 * 10;
+    scores[drink.id] = (s % 100); // raw 0-100
   }
   return scores;
 }
@@ -187,6 +177,19 @@ function scoreBySecretSeed(): Record<string, number> {
 function isBirthdayToday(month: number, day: number): boolean {
   const now = new Date();
   return now.getMonth() + 1 === month && now.getDate() === day;
+}
+
+/**
+ * Today's seed — YYYY-MM-DD string.
+ * Used to make variation/message selection date-dependent.
+ * Same person sees consistent results within a day, different across days.
+ */
+function getTodaySeed(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 // ── Energy Map Computation ────────────────────────────────────
@@ -246,7 +249,8 @@ export function computeMood(
   // ── Easter Egg: Birthday Today → Portakal Suyu ──
   if (isBirthdayToday(birthMonth, birthDay)) {
     const portakal = MOQ_DRINKS.find((d) => d.id === PORTAKAL_ID)!;
-    const personalityIndex = nameHash % portakal.personalities.length;
+    const todaySeed = getTodaySeed();
+    const personalityIndex = hashString(`${nameHash}_${todaySeed}`) % portakal.personalities.length;
     return {
       drink: portakal,
       personalityIndex,
@@ -285,10 +289,13 @@ export function computeMood(
   const secondScore = totalScores[sorted[1].id] || 0;
 
   // ── Easter Egg: Churchill (scores are too close) ──
+  // Skorlar 0-100 aralığında aggregate edildiği için, "çok yakın" = < 5 fark.
+  // churchillChance < 5 → %5 ihtimalle Churchill çıkar (nadir).
   const scoreDiff = topScore - secondScore;
-  const churchillChance = hashString(`${nameHash}_churchill_roll`) % 100;
+  const todaySeed = getTodaySeed();
+  const churchillChance = hashString(`${nameHash}_${todaySeed}_churchill_roll`) % 100;
 
-  if (scoreDiff < 2 && churchillChance < 5) {
+  if (scoreDiff < 5 && churchillChance < 5) {
     const churchill = MOQ_DRINKS.find((d) => d.id === CHURCHILL_ID)!;
     const personalityIndex = 0; // Churchill only has 1 variation
     return {
@@ -303,18 +310,23 @@ export function computeMood(
 
   // ── Select winner ──
   const winner = sorted[0];
-  const personalityIndex = nameHash % winner.personalities.length;
+
+  // Bug 2 fix: Variation depends on BOTH identity AND today's date.
+  // "Bugünün MOQ'u" vaadi: aynı kişi farklı günlerde farklı varyasyon görebilir,
+  // ama aynı gün içinde tutarlıdır.
+  // (todaySeed, Churchill easter egg bloğunda yukarıda tanımlandı)
+  const personalityIndex = hashString(`${nameHash}_${todaySeed}_variation`) % winner.personalities.length;
 
   // ── Compute energy map ──
   const dayEnergy = getDayEnergy(birthDay);
   const energy = computeEnergyMap(nameHash, season, dayEnergy, secretHash);
 
-  // ── Rare message (5% chance) ──
-  const rareRoll = hashString(`${nameHash}_rare_roll`) % 100;
+  // ── Rare message (5% chance) — also date-dependent ──
+  const rareRoll = hashString(`${nameHash}_${todaySeed}_rare_roll`) % 100;
   const showRareMessage = rareRoll < 5;
 
-  const rareMessage = RARE_MESSAGES[hashString(`${nameHash}_rare_msg`) % RARE_MESSAGES.length];
-  const miniJoke = MINI_JOKES[hashString(`${nameHash}_joke`) % MINI_JOKES.length];
+  const rareMessage = RARE_MESSAGES[hashString(`${nameHash}_${todaySeed}_rare_msg`) % RARE_MESSAGES.length];
+  const miniJoke = MINI_JOKES[hashString(`${nameHash}_${todaySeed}_joke`) % MINI_JOKES.length];
 
   return {
     drink: winner,

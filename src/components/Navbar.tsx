@@ -19,7 +19,7 @@ export default function Navbar({ onMoodFinderClick }: NavbarProps) {
     const handleScroll = () => {
       setScrolled(window.scrollY > 40);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true }); // PERF-10
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 

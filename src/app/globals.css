@@ -643,3 +643,61 @@ html.lenis, html.lenis body {
   animation: bg-color-shift 4s ease-out forwards;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   PERF-6: will-change Policy
+   Applied immediately before animation, removed after.
+   Use .anim-prepare to set will-change, then toggle off.
+   ═══════════════════════════════════════════════════════════════ */
+.anim-prepare {
+  will-change: transform, opacity;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GSAP-6 / A11Y-7: prefers-reduced-motion
+   Respect globally — instant end-states, not disabled functionality.
+   ═══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PERF-9: Mobile scroll distance compression
+   Reduce vertical padding on mobile to shorten total scroll distance
+   by ~35-45% without removing content.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  /* Tighten section spacing globally on mobile */
+  .scene {
+    padding-top: 2.5rem !important;
+    padding-bottom: 2.5rem !important;
+  }
+
+  /* Transition sections: reduce from 50vh to 30-40dvh (TRANS-1) */
+  .mobile-transition-compact {
+    min-height: 35dvh !important;
+  }
+
+  /* Philosophy: compact card heights (PHIL-2) */
+  .mobile-philosophy-card {
+    min-height: 240px !important;
+  }
+
+  /* Community: masonry gap (COMM-2) */
+  .mobile-community-grid {
+    gap: 16px !important;
+  }
+
+  /* Join Our World: compact CTA (JOIN-1) */
+  .mobile-join-cta {
+    max-height: 300px !important;
+  }
+}
+
+
