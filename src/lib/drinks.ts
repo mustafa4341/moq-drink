@@ -9,6 +9,21 @@
    2. Update the `image` field below with the path
    ═══════════════════════════════════════════════════════════════ */
 
+export interface ResultTheme {
+  tagline: string;
+  worldSubtext: string;
+  ingredientsSubtext: string;
+  jokeNormal: string;
+  jokeBold: string;
+  jokeEmoji: string;
+  bgGrad: string;
+  accentGlow: string;
+  coreSymbol: string;
+  particleType: "snow" | "embers" | "petals" | "leaves" | "pollen" | "bubbles" | "sparkles" | "citrus";
+  particleColor: string;
+  bgDecorativeClasses?: string;
+}
+
 export interface MoqDrink {
   id: string;
   name: string;
@@ -29,6 +44,7 @@ export interface MoqDrink {
   };
   ingredients: string[];
   worldName: string;
+  resultTheme: ResultTheme;
 }
 
 export const MOQ_DRINKS: MoqDrink[] = [
@@ -55,6 +71,19 @@ export const MOQ_DRINKS: MoqDrink[] = [
     },
     ingredients: ["Portakal", "Mango", "Limon"],
     worldName: "Kaşif",
+    resultTheme: {
+      tagline: "Maceraya atıl, sınırları keşfet.",
+      worldSubtext: "Bilinmeyenin heyecanı her zaman seninle.",
+      ingredientsSubtext: "Egzotik, tatlı ve canlandırıcı meyve karması.",
+      jokeNormal: "Google Maps seni değil, ",
+      jokeBold: "sen Google Maps'i şaşırtıyorsun.",
+      jokeEmoji: "🧭",
+      bgGrad: "from-[#FFFDF9] via-[#FFF2DF]/30 to-[#FFE3BA]/40",
+      accentGlow: "rgba(229, 138, 43, 0.35)",
+      coreSymbol: "🧭",
+      particleType: "petals",
+      particleColor: "rgba(229, 138, 43, 0.3)",
+    }
   },
   {
     id: "cool-lime",
@@ -79,6 +108,19 @@ export const MOQ_DRINKS: MoqDrink[] = [
     },
     ingredients: ["Lime", "Nane", "Soda"],
     worldName: "Sakin",
+    resultTheme: {
+      tagline: "Zihnini dinlendir, derin bir nefes al.",
+      worldSubtext: "Yeşil vadilerin ferah esintisi.",
+      ingredientsSubtext: "Ferahlatıcı, naneli ve serinletici nane-lime.",
+      jokeNormal: "Telefonunun şarjı %3 olsa bile ",
+      jokeBold: "hiç panik yapmıyorsun.",
+      jokeEmoji: "🧘",
+      bgGrad: "from-[#F7FDF6] via-[#E5F5E4]/20 to-[#CBEFC4]/30",
+      accentGlow: "rgba(115, 184, 62, 0.35)",
+      coreSymbol: "🍃",
+      particleType: "leaves",
+      particleColor: "rgba(115, 184, 62, 0.3)",
+    }
   },
   {
     id: "redline",
@@ -94,7 +136,7 @@ export const MOQ_DRINKS: MoqDrink[] = [
       `Beklemeyi pek seven biri değilsin.\nFırsat gördüğünde ilk adımı atan sensin.\nBazen fazla cesur oluyorsun ama zaten güzel hikâyeler biraz cesaret ister.\nBugün enerjin Redline.\nHibiscus kadar güçlü,\nçilek kadar dikkat çekici,\ntam senlik.`,
       `Bulunduğun ortam biraz sessizse,\nçok büyük ihtimalle sen daha yeni gelmişsindir.\nEnerjin yükseltmeyi seviyorsun.\nMOQ bugün seni Redline olarak görüyor.`,
     ],
-    joke: "Kahve seni uyandırmıyor.\nSen kahveyi uyandırıyorsun.",
+    joke: "Kahve seni uyandırmıyor. Sen kahveyi uyandırıyorsun.",
     traits: {
       cesaret: 92,
       dinginlik: 20,
@@ -103,6 +145,19 @@ export const MOQ_DRINKS: MoqDrink[] = [
     },
     ingredients: ["Hibiscus", "Çilek", "Sweet & Sour", "Limon"],
     worldName: "Lider",
+    resultTheme: {
+      tagline: "Tutkunu seç, sınırları zorla.",
+      worldSubtext: "İçindeki kıvılcım ateşe dönüşüyor.",
+      ingredientsSubtext: "Güçlü, meyveli ve kırmızı tonlu orman lezzeti.",
+      jokeNormal: "Kahve seni uyandırmıyor. ",
+      jokeBold: "Sen kahveyi uyandırıyorsun.",
+      jokeEmoji: "⚡",
+      bgGrad: "from-[#FFF7F9] via-[#FCE6EC]/25 to-[#F9CDD9]/35",
+      accentGlow: "rgba(224, 79, 117, 0.35)",
+      coreSymbol: "🔥",
+      particleType: "embers",
+      particleColor: "rgba(224, 79, 117, 0.3)",
+    }
   },
   {
     id: "sundrop",
@@ -116,9 +171,9 @@ export const MOQ_DRINKS: MoqDrink[] = [
     image: "/images/sundrop.png",
     personalities: [
       `İnsanların yüzünü güldürmek\nsana iyi geliyor.\nKüçük mutlulukları büyütebiliyorsun.\nBugün güneş biraz daha parlaksa\nbelki de sebebi sensindir.`,
-      `Sen acele etmiyorsun.\nDoğru zamanı bekliyorsun.\nVe çoğu zaman haklı çıkıyorsun.\nBugünkü MOQ'un\nSundrop.`,
+      `Sen acele etmiyorsun.\nDoğru zamanı bekliyorsun.\nVe çoğu zaman haklı çıkıyorsun.\nBugündeki MOQ'un\nSundrop.`,
     ],
-    joke: "Hava durumunu açmana gerek yok.\nSen zaten güneş getiriyorsun.",
+    joke: "Hava durumunu açmana gerek yok. Sen zaten güneş getiriyorsun.",
     traits: {
       cesaret: 45,
       dinginlik: 72,
@@ -127,6 +182,19 @@ export const MOQ_DRINKS: MoqDrink[] = [
     },
     ingredients: ["Mango", "Portakal", "Bal", "Gün Işığı"],
     worldName: "Sıcakkanlı",
+    resultTheme: {
+      tagline: "Senin ışığın, senin anın.",
+      worldSubtext: "Güneşin sıcaklığı seninle.",
+      ingredientsSubtext: "Mango • Portakal • Bal • Gün Işığı",
+      jokeNormal: "Hava durumunu açmana gerek yok. ",
+      jokeBold: "Sen zaten güneş getiriyorsun.",
+      jokeEmoji: "😎",
+      bgGrad: "from-[#FFFDF7] via-[#FFF5E0]/30 to-[#FFE9BC]/40",
+      accentGlow: "rgba(240, 160, 48, 0.35)",
+      coreSymbol: "☀️",
+      particleType: "pollen",
+      particleColor: "rgba(240, 160, 48, 0.3)",
+    }
   },
   {
     id: "sunset",
@@ -142,7 +210,7 @@ export const MOQ_DRINKS: MoqDrink[] = [
       `Herkes koşarken\nsen bazen durup manzarayı izliyorsun.\nHayatın güzel taraflarını fark etmek\nsenin süper gücün.\nBugün sana en çok yakışan\nSunset.`,
       `Senin enerjin\nyüksek sesli değil.\nAma uzun süre akılda kalıyor.\nMOQ bugün seni\nSunset\nolarak görüyor.`,
     ],
-    joke: "Fotoğraf çekerken gün batımını bekleyen ekipten misin?\nBiz de öyle düşünmüştük.",
+    joke: "Fotoğraf çekerken gün batımını bekleyen ekipten misin? Biz de öyle düşünmüştük.",
     traits: {
       cesaret: 38,
       dinginlik: 85,
@@ -151,6 +219,19 @@ export const MOQ_DRINKS: MoqDrink[] = [
     },
     ingredients: ["Greyfurt", "Portakal", "Rom", "Şeker"],
     worldName: "Hayalperest",
+    resultTheme: {
+      tagline: "Günü bitirirken hayallere dal.",
+      worldSubtext: "Gün batımının eşsiz büyülü renkleri.",
+      ingredientsSubtext: "Egzotik greyfurt aromalı gün batımı tatları.",
+      jokeNormal: "Fotoğraf çekerken gün batımını bekleyen ",
+      jokeBold: "o romantik ekiptensin.",
+      jokeEmoji: "🌇",
+      bgGrad: "from-[#FFFBF9] via-[#FFE8D6]/35 to-[#FFCFB2]/40",
+      accentGlow: "rgba(212, 98, 43, 0.35)",
+      coreSymbol: "🌅",
+      particleType: "sparkles",
+      particleColor: "rgba(212, 98, 43, 0.3)",
+    }
   },
   {
     id: "limonata",
@@ -164,9 +245,9 @@ export const MOQ_DRINKS: MoqDrink[] = [
     image: "/images/limonata.png",
     personalities: [
       `Gösterişten çok\nsamimiyeti seviyorsun.\nSadelik senin tarzın.\nVe dürüst olmak gerekirse\nbazen en iyi seçim\nen klasik olanıdır.`,
-      `Bazı şeylerin modası geçmez.\nTıpkı senin enerjin gibi.\nBugünkü eşleşmen\nLimonata.`,
+      `Bazı şeylerin modası geçmez.\nTıpkı senin enerjin gibi.\nBugün eşleşmen\nLimonata.`,
     ],
-    joke: "Hayat sana limon verirse...\nSen zaten limonata içiyorsun.",
+    joke: "Hayat sana limon verirse... Sen zaten limonata içiyorsun.",
     traits: {
       cesaret: 40,
       dinginlik: 75,
@@ -175,6 +256,19 @@ export const MOQ_DRINKS: MoqDrink[] = [
     },
     ingredients: ["Limon", "Şeker", "Nane", "Su"],
     worldName: "Doğal",
+    resultTheme: {
+      tagline: "Klasik bir esinti, samimi bir tat.",
+      worldSubtext: "Geleneksel limon bahçelerinin tazeliği.",
+      ingredientsSubtext: "Doğal limon özleri ve nane tazeliği.",
+      jokeNormal: "Hayat sana ekşi limonlar verse de ",
+      jokeBold: "sen onlardan tatlı limonata yapıyorsun.",
+      jokeEmoji: "🍋",
+      bgGrad: "from-[#FFFFFA] via-[#FEFCE8]/20 to-[#FFF7BA]/30",
+      accentGlow: "rgba(201, 168, 0, 0.35)",
+      coreSymbol: "🍋",
+      particleType: "citrus",
+      particleColor: "rgba(201, 168, 0, 0.25)",
+    }
   },
   {
     id: "churchill",
@@ -198,6 +292,19 @@ export const MOQ_DRINKS: MoqDrink[] = [
     },
     ingredients: ["Gin", "Bitter", "Limon", "Soğuk"],
     worldName: "Nadir",
+    resultTheme: {
+      tagline: "Sıradışı bir duruş, kendine has bir tat.",
+      worldSubtext: "Vintage ve klasik çizgilerin eşsiz sadeliği.",
+      ingredientsSubtext: "Tuz, limon ve sodanın çarpıcı dengesi.",
+      jokeNormal: "Normal ve sıradan olmak ",
+      jokeBold: "sana her zaman fazla sıkıcı geldi.",
+      jokeEmoji: "🎩",
+      bgGrad: "from-[#FDFDFE] via-[#EEF1F5]/30 to-[#D5DEEB]/40",
+      accentGlow: "rgba(94, 111, 136, 0.35)",
+      coreSymbol: "🧂",
+      particleType: "bubbles",
+      particleColor: "rgba(94, 111, 136, 0.25)",
+    }
   },
   {
     id: "portakal-suyu",
@@ -221,6 +328,19 @@ export const MOQ_DRINKS: MoqDrink[] = [
     },
     ingredients: ["Portakal", "Vitamin C", "Güneş", "Tazelik"],
     worldName: "Saf",
+    resultTheme: {
+      tagline: "Güne enerjik başla, doğal kal.",
+      worldSubtext: "Geniş portakal bahçelerinin sabah güneşi.",
+      ingredientsSubtext: "Sıkma taze portakallardan gelen saf C vitamini.",
+      jokeNormal: "Güneş enerjini ölçemiyoruz ama ",
+      jokeBold: "Vitamin C seviyen bizden yüksek olabilir.",
+      jokeEmoji: "🍹",
+      bgGrad: "from-[#FFFDF9] via-[#FFF7ED]/30 to-[#FCE0AC]/45",
+      accentGlow: "rgba(245, 158, 11, 0.35)",
+      coreSymbol: "🍊",
+      particleType: "pollen",
+      particleColor: "rgba(245, 158, 11, 0.3)",
+    }
   },
 ];
 
