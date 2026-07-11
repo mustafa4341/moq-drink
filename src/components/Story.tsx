@@ -10,6 +10,7 @@ import { timelineRegistry } from "@/lib/animation/TimelineRegistry";
 // Ensure ScrollTrigger is registered client-side
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize: true });
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -170,11 +171,15 @@ export default function Story() {
       });
     }, container);
 
-    ScrollTrigger.refresh();
+    // Stabilize scroll coordinates after dynamic layout shifts finish
+    const refreshTimer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 1500);
 
     return () => {
       ctx.revert(); // Robust unmount cleanup (GSAP-2)
       timelineRegistry.unregister("story-timeline");
+      clearTimeout(refreshTimer);
     };
   }, []);
 
@@ -186,18 +191,18 @@ export default function Story() {
     <section
       ref={containerRef}
       id="story"
-      className="relative w-full z-10 overflow-visible h-[200vh] md:h-[400vh]"
+      className="relative w-full z-10 overflow-visible h-[300vh] md:h-[400vh]"
     >
       {/* Sticky Inner Frame */}
       <div
         ref={bgRef}
-        className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center transition-colors duration-1000"
+        className="sticky top-0 w-full h-[100dvh] overflow-hidden flex items-center justify-center"
         style={{ backgroundColor: "#EAF6FF" }}
       >
         {/* Layer 1: Sky Collage Background */}
         <div
           ref={collageRef}
-          className="absolute inset-0 z-0 pointer-events-none select-none w-full h-full transition-all duration-1000"
+          className="absolute inset-0 z-0 pointer-events-none select-none w-full h-full"
         >
           <Image
             src="/images/moq_collage.webp"
@@ -217,7 +222,7 @@ export default function Story() {
         {/* Layer 3: Spotlight Glow */}
         <div
           ref={spotlightRef}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[55vh] rounded-full pointer-events-none mix-blend-screen transition-all duration-1000 z-0"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[55vh] rounded-full pointer-events-none mix-blend-screen z-0"
           style={{
             background: "radial-gradient(circle, rgba(56,139,230,0.15) 0%, transparent 65%)",
           }}

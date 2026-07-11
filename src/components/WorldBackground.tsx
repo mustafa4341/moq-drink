@@ -8,6 +8,7 @@ import { animationManager } from "@/lib/animation/AnimationManager";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
+  ScrollTrigger.config({ ignoreMobileResize: true });
 }
 
 /* ═══════════════════════════════════════════════════════════════
