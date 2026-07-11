@@ -73,8 +73,8 @@ export default function Story() {
 
       // Setup timeline for either Desktop or Mobile view
       const setupTimeline = (isMobileView: boolean) => {
-        // Set initial states (reduced y values on mobile for alignment)
-        gsap.set([t2, t3, t4a, t4b], { opacity: 0, filter: "blur(4px)", y: isMobileView ? 40 : 60 });
+        // Set initial states (consistent y values for both)
+        gsap.set([t2, t3, t4a, t4b], { opacity: 0, filter: "blur(4px)", y: 60 });
         gsap.set(t1, { opacity: 1, filter: "blur(0px)", y: 0 });
 
         // Initial drink opacities
@@ -85,7 +85,7 @@ export default function Story() {
 
         if (blossomsLayer) {
           gsap.set(blossomsLayer, {
-            opacity: isMobileView ? 0 : 0.8,
+            opacity: 0.8,
             "--particle-color-1": "rgba(165, 214, 255, 0.85)",
             "--particle-color-2": "rgba(220, 238, 255, 0.75)",
           });
@@ -96,7 +96,7 @@ export default function Story() {
             trigger: container,
             start: "top top",
             end: "bottom bottom",
-            scrub: isMobileView ? true : 1.8, // Lock instantly to finger scroll coordinates on mobile to prevent laggy drag/snapping
+            scrub: isMobileView ? 1.2 : 1.8, // 1.2 provides a beautiful smooth deceleration on mobile
             invalidateOnRefresh: true,
           },
         });
@@ -107,7 +107,7 @@ export default function Story() {
         tl.to(bg, { backgroundColor: "#FFE8C5", duration: 0.10 }, 0.20)
           .to(spl, { background: "radial-gradient(circle, rgba(229,138,43,0.15) 0%, transparent 65%)", duration: 0.10 }, 0.20);
 
-        if (blossomsLayer && !isMobileView) {
+        if (blossomsLayer) {
           tl.to(blossomsLayer, {
             "--particle-color-1": "rgba(229, 138, 43, 0.55)",
             "--particle-color-2": "rgba(255, 180, 80, 0.5)",
@@ -117,7 +117,7 @@ export default function Story() {
 
         tl.to(d1, { opacity: 0.03, scale: 0.95, duration: 0.10 }, 0.20)
           .to(d2, { opacity: 0.12, scale: 1, duration: 0.10 }, 0.20)
-          .to(t1, { opacity: 0, filter: "blur(4px)", y: isMobileView ? -40 : -60, duration: 0.07 }, 0.20)
+          .to(t1, { opacity: 0, filter: "blur(4px)", y: -60, duration: 0.07 }, 0.20)
           .to(".island-layer", { opacity: 0, y: 30, duration: 0.07 }, 0.20)
           .to(t2, { filter: "blur(0px)", duration: 0.03 }, 0.25)
           .to(".palm-layer", { opacity: 1, scale: 1, duration: 0.05 }, 0.25)
@@ -127,7 +127,7 @@ export default function Story() {
         tl.to(bg, { backgroundColor: "#FFE4F0", duration: 0.10 }, 0.45)
           .to(spl, { background: "radial-gradient(circle, rgba(224,79,117,0.15) 0%, transparent 65%)", duration: 0.10 }, 0.45);
 
-        if (blossomsLayer && !isMobileView) {
+        if (blossomsLayer) {
           tl.to(blossomsLayer, {
             "--particle-color-1": "rgba(224, 79, 117, 0.5)",
             "--particle-color-2": "rgba(115, 184, 62, 0.45)",
@@ -137,7 +137,7 @@ export default function Story() {
 
         tl.to(d2, { opacity: 0.03, scale: 0.95, duration: 0.10 }, 0.45)
           .to(d3, { opacity: 0.12, scale: 1, duration: 0.10 }, 0.45)
-          .to(t2, { opacity: 0, filter: "blur(4px)", y: isMobileView ? -40 : -60, duration: 0.07 }, 0.45)
+          .to(t2, { opacity: 0, filter: "blur(4px)", y: -60, duration: 0.07 }, 0.45)
           .to(".palm-layer", { opacity: 0, y: -30, duration: 0.07 }, 0.45)
           .to(t3, { filter: "blur(0px)", duration: 0.03 }, 0.50)
           .to(t3, { opacity: 1, y: 0, duration: 0.05 }, 0.50);
@@ -147,9 +147,9 @@ export default function Story() {
           .to(spl, { background: "radial-gradient(circle, rgba(26,37,60,0.06) 0%, transparent 70%)", duration: 0.10 }, 0.70)
           .to(d3, { opacity: 0.03, scale: 0.95, duration: 0.10 }, 0.70)
           .to(collage, { opacity: 0.08, scale: 1.05, duration: 0.10 }, 0.70)
-          .to(t3, { opacity: 0, filter: "blur(4px)", y: isMobileView ? -40 : -60, duration: 0.07 }, 0.70);
+          .to(t3, { opacity: 0, filter: "blur(4px)", y: -60, duration: 0.07 }, 0.70);
 
-        if (blossomsLayer && !isMobileView) {
+        if (blossomsLayer) {
           tl.to(blossomsLayer, { opacity: 0, duration: 0.07 }, 0.70);
         }
 
@@ -191,7 +191,7 @@ export default function Story() {
     <section
       ref={containerRef}
       id="story"
-      className="relative w-full z-10 overflow-visible h-[300vh] md:h-[400vh]"
+      className="relative w-full z-10 overflow-visible h-[400vh]"
     >
       {/* Sticky Inner Frame */}
       <div
@@ -213,8 +213,8 @@ export default function Story() {
           />
         </div>
 
-        {/* Layer 2: Moving Continuous Clouds (Desktop Only via CSS) */}
-        <div className="absolute inset-0 pointer-events-none select-none z-0 overflow-hidden opacity-[0.05] hidden md:block">
+        {/* Layer 2: Moving Continuous Clouds */}
+        <div className="absolute inset-0 pointer-events-none select-none z-0 overflow-hidden opacity-[0.05]">
           <div className="absolute top-[8%] left-[-15%] w-[450px] h-[180px] bg-white rounded-full blur-3xl animate-[cloud-drift-slow_50s_linear_infinite]" />
           <div className="absolute top-[35%] right-[-15%] w-[550px] h-[220px] bg-white rounded-full blur-3xl animate-[cloud-drift-fast_40s_linear_infinite]" />
         </div>
@@ -301,10 +301,10 @@ export default function Story() {
           </svg>
         </div>
 
-        {/* S1, S2, S3: Dynamic-color Leaves and Petals falling (Desktop Only via CSS) */}
+        {/* S1, S2, S3: Dynamic-color Leaves and Petals falling */}
         <div
           ref={blossomsLayerRef}
-          className="blossoms-layer absolute inset-0 pointer-events-none select-none z-1 overflow-hidden hidden md:block"
+          className="blossoms-layer absolute inset-0 pointer-events-none select-none z-1 overflow-hidden"
           style={{
             opacity: 0.8,
             "--particle-color-1": "rgba(165, 214, 255, 0.85)",

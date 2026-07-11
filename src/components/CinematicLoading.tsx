@@ -79,83 +79,87 @@ export default function CinematicLoading({ onComplete }: CinematicLoadingProps) 
           style={{ background: "#ffffff" }}
         >
           {/* ── Noise Grain Overlay ──────────────────────────── */}
-          <div
-            className="noise-overlay"
-            style={{ opacity: stage < 2 ? 0.04 : 0.02 }}
-          />
+          {!isMobile && (
+            <div
+              className="noise-overlay"
+              style={{ opacity: stage < 2 ? 0.04 : 0.02 }}
+            />
+          )}
 
           {/* ── Cloud Layer System ──────────────────────────── */}
-          <div className="absolute inset-0 w-full h-full pointer-events-none">
-            {/* Cloud Left */}
-            <motion.div
-              initial={{ x: "-30%", y: "-10%", scale: 0.8, opacity: 0 }}
-              animate={
-                stage === 3
-                  ? { x: "-120%", y: "-40%", scale: 3, opacity: 0 }
-                  : stage >= 1
-                  ? { x: "0%", y: "0%", scale: 1.1, opacity: 0.85 }
-                  : { x: "-30%", y: "-10%", scale: 0.8, opacity: 0 }
-              }
-              transition={{
-                duration: stage === 3 ? 0.8 : 1.2,
-                ease: stage === 3 ? "easeIn" : [0.16, 1, 0.3, 1],
-              }}
-              className="absolute top-1/4 left-0 w-[420px] h-72 bg-radial from-sky-100/50 to-transparent blur-md md:blur-3xl will-change-transform"
-            />
+          {!isMobile && (
+            <div className="absolute inset-0 w-full h-full pointer-events-none">
+              {/* Cloud Left */}
+              <motion.div
+                initial={{ x: "-30%", y: "-10%", scale: 0.8, opacity: 0 }}
+                animate={
+                  stage === 3
+                    ? { x: "-120%", y: "-40%", scale: 3, opacity: 0 }
+                    : stage >= 1
+                    ? { x: "0%", y: "0%", scale: 1.1, opacity: 0.85 }
+                    : { x: "-30%", y: "-10%", scale: 0.8, opacity: 0 }
+                }
+                transition={{
+                  duration: stage === 3 ? 0.8 : 1.2,
+                  ease: stage === 3 ? "easeIn" : [0.16, 1, 0.3, 1],
+                }}
+                className="absolute top-1/4 left-0 w-[420px] h-72 bg-radial from-sky-100/50 to-transparent blur-md md:blur-3xl will-change-transform"
+              />
 
-            {/* Cloud Right */}
-            <motion.div
-              initial={{ x: "30%", y: "15%", scale: 0.8, opacity: 0 }}
-              animate={
-                stage === 3
-                  ? { x: "120%", y: "40%", scale: 3, opacity: 0 }
-                  : stage >= 1
-                  ? { x: "0%", y: "0%", scale: 1.1, opacity: 0.85 }
-                  : { x: "30%", y: "15%", scale: 0.8, opacity: 0 }
-              }
-              transition={{
-                duration: stage === 3 ? 0.8 : 1.2,
-                ease: stage === 3 ? "easeIn" : [0.16, 1, 0.3, 1],
-                delay: 0.1,
-              }}
-              className="absolute bottom-1/4 right-0 w-[500px] h-80 bg-radial from-sky-100/40 to-transparent blur-md md:blur-3xl will-change-transform"
-            />
+              {/* Cloud Right */}
+              <motion.div
+                initial={{ x: "30%", y: "15%", scale: 0.8, opacity: 0 }}
+                animate={
+                  stage === 3
+                    ? { x: "120%", y: "40%", scale: 3, opacity: 0 }
+                    : stage >= 1
+                    ? { x: "0%", y: "0%", scale: 1.1, opacity: 0.85 }
+                    : { x: "30%", y: "15%", scale: 0.8, opacity: 0 }
+                }
+                transition={{
+                  duration: stage === 3 ? 0.8 : 1.2,
+                  ease: stage === 3 ? "easeIn" : [0.16, 1, 0.3, 1],
+                  delay: 0.1,
+                }}
+                className="absolute bottom-1/4 right-0 w-[500px] h-80 bg-radial from-sky-100/40 to-transparent blur-md md:blur-3xl will-change-transform"
+              />
 
-            {/* Cloud Top */}
-            <motion.div
-              initial={{ x: "0%", y: "-20%", scale: 0.8, opacity: 0 }}
-              animate={
-                stage === 3
-                  ? { y: "-80%", scale: 3, opacity: 0 }
-                  : stage >= 1
-                  ? { x: "0%", y: "0%", scale: 1, opacity: 0.6 }
-                  : { x: "0%", y: "-20%", scale: 0.8, opacity: 0 }
-              }
-              transition={{
-                duration: stage === 3 ? 0.7 : 1.0,
-                ease: stage === 3 ? "easeIn" : [0.16, 1, 0.3, 1],
-                delay: 0.15,
-              }}
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-48 bg-radial from-white/70 to-transparent blur-md md:blur-3xl will-change-transform"
-            />
+              {/* Cloud Top */}
+              <motion.div
+                initial={{ x: "0%", y: "-20%", scale: 0.8, opacity: 0 }}
+                animate={
+                  stage === 3
+                    ? { y: "-80%", scale: 3, opacity: 0 }
+                    : stage >= 1
+                    ? { x: "0%", y: "0%", scale: 1, opacity: 0.6 }
+                    : { x: "0%", y: "-20%", scale: 0.8, opacity: 0 }
+                }
+                transition={{
+                  duration: stage === 3 ? 0.7 : 1.0,
+                  ease: stage === 3 ? "easeIn" : [0.16, 1, 0.3, 1],
+                  delay: 0.15,
+                }}
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-48 bg-radial from-white/70 to-transparent blur-md md:blur-3xl will-change-transform"
+              />
 
-            {/* Cloud Center Glow */}
-            <motion.div
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={
-                stage === 3
-                  ? { scale: 4, opacity: 1 }
-                  : stage >= 1
-                  ? { scale: 1.2, opacity: 0.6 }
-                  : { scale: 0.6, opacity: 0 }
-              }
-              transition={{
-                duration: stage === 3 ? 0.8 : 1.5,
-                ease: stage === 3 ? "easeIn" : "easeOut",
-              }}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-radial from-brand-blue-bg/40 via-white to-transparent blur-md md:blur-2xl will-change-transform"
-            />
-          </div>
+              {/* Cloud Center Glow */}
+              <motion.div
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={
+                  stage === 3
+                    ? { scale: 4, opacity: 1 }
+                    : stage >= 1
+                    ? { scale: 1.2, opacity: 0.6 }
+                    : { scale: 0.6, opacity: 0 }
+                }
+                transition={{
+                  duration: stage === 3 ? 0.8 : 1.5,
+                  ease: stage === 3 ? "easeIn" : "easeOut",
+                }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-radial from-brand-blue-bg/40 via-white to-transparent blur-md md:blur-2xl will-change-transform"
+              />
+            </div>
+          )}
 
           {/* ── MOQ Logo ─────────────────────────────────────── */}
           <div className="relative z-10 flex flex-col items-center justify-center text-center">
@@ -181,7 +185,7 @@ export default function CinematicLoading({ onComplete }: CinematicLoadingProps) 
           </div>
 
           {/* ── Light Flare (Stage 3 — entering the world) ──── */}
-          {stage === 3 && (
+          {stage === 3 && !isMobile && (
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 5, opacity: 1 }}
@@ -191,12 +195,14 @@ export default function CinematicLoading({ onComplete }: CinematicLoadingProps) 
           )}
 
           {/* ── Bottom mist line ────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={stage >= 1 ? { opacity: 0.15 } : { opacity: 0 }}
-            transition={{ duration: 0.6 }}
-            className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white/30 to-transparent pointer-events-none"
-          />
+          {!isMobile && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={stage >= 1 ? { opacity: 0.15 } : { opacity: 0 }}
+              transition={{ duration: 0.6 }}
+              className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-white/30 to-transparent pointer-events-none"
+            />
+          )}
         </motion.div>
       )}
     </AnimatePresence>
