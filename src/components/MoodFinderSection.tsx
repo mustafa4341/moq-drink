@@ -104,10 +104,6 @@ export default function MoodFinderSection() {
     setVisibleMessages(0);
   };
 
-  if (isMobile === null) {
-    return <section id="mood-finder" className="relative w-full min-h-[50vh] bg-[#F7FAFF]" />;
-  }
-
   return (
     <section
       id="mood-finder"
@@ -188,7 +184,7 @@ export default function MoodFinderSection() {
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 className="w-full flex flex-col space-y-6 pt-2"
               >
-                {isMobile ? (
+                <div className="block md:hidden w-full">
                   <MobileFormFlow
                     name={name}
                     surname={surname}
@@ -200,7 +196,8 @@ export default function MoodFinderSection() {
                     setMobileStep={setMobileStep}
                     onSubmit={handleCompute}
                   />
-                ) : (
+                </div>
+                <div className="hidden md:block w-full">
                   <DesktopForm
                     name={name}
                     surname={surname}
@@ -210,7 +207,7 @@ export default function MoodFinderSection() {
                     setBirthDate={setBirthDate}
                     onSubmit={handleCompute}
                   />
-                )}
+                </div>
               </motion.div>
             )}
 
