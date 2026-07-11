@@ -72,7 +72,7 @@ export default function Footer() {
           </a>
 
           <a
-            href="mailto:hello@moqdrink.com"
+            href="mailto:muhsinsuhansari@hotmail.com"
             className="flex items-center justify-center space-x-2 py-3 px-6 min-h-[44px]"
           >
             <Mail className="w-4 h-4" />
@@ -250,7 +250,7 @@ export default function Footer() {
 
           <Magnetic range={25} strength={0.3}>
             <a
-              href="mailto:hello@moqdrink.com"
+              href="mailto:muhsinsuhansari@hotmail.com"
               className="hover:text-white flex items-center space-x-2 transition-colors duration-300"
             >
               <Mail className="w-4 h-4" />
