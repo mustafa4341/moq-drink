@@ -26,6 +26,15 @@ const GRADIENTS = [
   "radial-gradient(ellipse at 65% 30%, rgb(251,230,229) 0%, rgb(245,201,226) 55%, rgb(36,43,62) 100%)"    // Sunset
 ];
 
+// High-performance linear gradients for mobile (eliminates radial composite overhead)
+const MOBILE_GRADIENTS = [
+  "linear-gradient(to bottom, #fdf7f4, #e2effc)", // Morning
+  "linear-gradient(to bottom, #f7faff, #d8ecfd)", // Midday
+  "linear-gradient(to bottom, #faf9f4, #e2ebf5)", // Afternoon
+  "linear-gradient(to bottom, #fef3e5, #fbd9b5)", // Golden Hour
+  "linear-gradient(to bottom, #fbe6e5, #f5c9e2)"  // Sunset
+];
+
 const LEAF_PATHS = [
   "M50,0 C65,25 75,45 75,70 C75,85 62,95 50,95 C38,95 25,85 25,70 C25,45 35,25 50,0 Z",
   "M50,5 C68,22 80,48 78,73 C76,87 63,97 50,95 C37,97 24,87 22,73 C20,48 32,22 50,5 Z",
@@ -184,11 +193,11 @@ export default function WorldBackground() {
       <div className="fixed inset-0 w-full h-full pointer-events-none overflow-hidden z-0 select-none">
         {/* Stacked background gradient layers */}
         <div ref={layersContainerRef} className="absolute inset-0 w-full h-full">
-          <div className="absolute inset-0 w-full h-full" style={{ background: GRADIENTS[0] }} />
-          <div className="absolute inset-0 w-full h-full opacity-0" style={{ background: GRADIENTS[1] }} />
-          <div className="absolute inset-0 w-full h-full opacity-0" style={{ background: GRADIENTS[2] }} />
-          <div className="absolute inset-0 w-full h-full opacity-0" style={{ background: GRADIENTS[3] }} />
-          <div className="absolute inset-0 w-full h-full opacity-0" style={{ background: GRADIENTS[4] }} />
+          <div className="absolute inset-0 w-full h-full" style={{ background: MOBILE_GRADIENTS[0] }} />
+          <div className="absolute inset-0 w-full h-full opacity-0" style={{ background: MOBILE_GRADIENTS[1] }} />
+          <div className="absolute inset-0 w-full h-full opacity-0" style={{ background: MOBILE_GRADIENTS[2] }} />
+          <div className="absolute inset-0 w-full h-full opacity-0" style={{ background: MOBILE_GRADIENTS[3] }} />
+          <div className="absolute inset-0 w-full h-full opacity-0" style={{ background: MOBILE_GRADIENTS[4] }} />
         </div>
 
         {/* Layer 2: Cloud Layer Mid (40s) - Simplified (no heavy blur) */}

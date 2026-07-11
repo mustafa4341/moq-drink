@@ -25,6 +25,16 @@ export default function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hasScrolled, setHasScrolled] = useState(false);
   const isMobile = useIsMobile();
+  const [fixedHeight, setFixedHeight] = useState<number | string>("95dvh");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (window.innerWidth < 768) {
+        // Lock mobile height to 95% of window height on mount
+        setFixedHeight(window.innerHeight * 0.95);
+      }
+    }
+  }, []);
 
   // Parallax coordinates from mouse movement — PERF-3: disabled on mobile
   const pX = useMotionValue(0);
@@ -73,16 +83,17 @@ export default function Hero() {
       id="home"
       ref={containerRef}
       onMouseMove={handleGlobalMouseMove}
-      className="relative h-[95dvh] lg:h-screen w-full flex items-center justify-center px-6 md:px-12 overflow-hidden z-20 bg-white"
+      className="relative w-full flex items-center justify-center px-6 md:px-12 overflow-hidden z-20 bg-white lg:h-screen"
+      style={isMobile ? { height: fixedHeight } : { height: "95dvh" }}
     >
       {/* ── 100% Visual Match Background Image with Mouse Parallax ── */}
       {/* PERF-3: Parallax transform only applied on desktop */}
       <motion.div
-        style={isMobile ? { scale: 1.04 } : {
+        style={isMobile === false ? {
           x: bgTranslateX,
           y: bgTranslateY,
           scale: 1.04, // slightly scaled up to support parallax edges without clipping
-        }}
+        } : { scale: 1.04 }}
         className="absolute inset-0 z-0 select-none pointer-events-none"
       >
         <Image

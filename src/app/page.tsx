@@ -52,11 +52,16 @@ const BottomSheet = dynamic(() => import("@/components/BottomSheet"), { ssr: fal
 
 export default function Home() {
   const [isEntered, setIsEntered] = useState(false);
+  const [showLoading, setShowLoading] = useState(true);
   const [selectedDrink, setSelectedDrink] = useState<Drink | null>(null);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
 
   const handleEntranceComplete = useCallback(() => {
     setIsEntered(true);
+    // Garbage collect and unmount CinematicLoading after fade-out transition finishes
+    setTimeout(() => {
+      setShowLoading(false);
+    }, 1000);
   }, []);
 
   // Safety fallback: never get stuck on a blank/white screen.
@@ -64,7 +69,10 @@ export default function Home() {
   // force-enter the experience.
   useEffect(() => {
     if (isEntered) return;
-    const t = setTimeout(() => setIsEntered(true), 4500);
+    const t = setTimeout(() => {
+      setIsEntered(true);
+      setTimeout(() => setShowLoading(false), 1000);
+    }, 4500);
     return () => clearTimeout(t);
   }, [isEntered]);
 
@@ -83,7 +91,7 @@ export default function Home() {
   return (
     <div className="relative min-h-screen text-brand-navy selection:bg-brand-blue-bg selection:text-brand-blue-text">
       {/* Scene 0: Cinematic Loading Sequence */}
-      <CinematicLoading onComplete={handleEntranceComplete} />
+      {showLoading && <CinematicLoading onComplete={handleEntranceComplete} />}
 
       {isEntered && (
         <>
