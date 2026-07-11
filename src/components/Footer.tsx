@@ -60,12 +60,12 @@ export default function Footer() {
         </div>
 
         {/* Links */}
-        <div className="flex flex-col space-y-4 text-xs font-black tracking-widest text-[#fbe6e5] uppercase">
+        <div className="flex flex-col space-y-2 text-xs font-black tracking-widest text-[#fbe6e5] uppercase">
           <a
             href="https://instagram.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center space-x-2"
+            className="flex items-center justify-center space-x-2 py-3 px-6 min-h-[44px]"
           >
             <Instagram className="w-4 h-4" />
             <span>INSTAGRAM</span>
@@ -73,7 +73,7 @@ export default function Footer() {
 
           <a
             href="mailto:hello@moqdrink.com"
-            className="flex items-center justify-center space-x-2"
+            className="flex items-center justify-center space-x-2 py-3 px-6 min-h-[44px]"
           >
             <Mail className="w-4 h-4" />
             <span>İLETİŞİM</span>

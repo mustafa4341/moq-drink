@@ -4,6 +4,8 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import gsap from "gsap";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { PRODUCTS, type Drink } from "@/lib/product-data";
 
 /* ═══════════════════════════════════════════════════════════════
    INFINITE CAROUSEL — Scene 2: Flavor Gallery (The Collection)
@@ -28,65 +30,11 @@ import gsap from "gsap";
      6. Pause carousel
    ═══════════════════════════════════════════════════════════════ */
 
-interface CarouselDrink {
-  id: number;
-  name: string;
-  subtext: string;
-  image: string;
-  accentColor: string;
-  textColorClass: string;
-  landscapeGrad: string;
-  bgStyle: string;
-}
+// 4× duplication for seamless infinite loop on desktop
+const itemsList = [...PRODUCTS, ...PRODUCTS, ...PRODUCTS, ...PRODUCTS];
 
-const carouselDrinks: CarouselDrink[] = [
-  {
-    id: 1,
-    name: "BLUE MOJITO",
-    subtext: "Mint, Lime, Blue Curacao, Soda",
-    image: "/images/blue_mojito.png",
-    accentColor: "#388be6",
-    textColorClass: "text-brand-blue-text",
-    landscapeGrad: "from-sky-200/50 via-blue-100/30 to-sky-50/20",
-    bgStyle: "rgba(226, 239, 253, 0.90)",
-  },
-  {
-    id: 2,
-    name: "BERRY BOOST",
-    subtext: "Strawberry, Blueberry, Raspberry, Tonic",
-    image: "/images/berry_boost.png",
-    accentColor: "#e04f75",
-    textColorClass: "text-brand-pink-text",
-    landscapeGrad: "from-rose-200/50 via-pink-100/30 to-rose-50/20",
-    bgStyle: "rgba(251, 231, 237, 0.90)",
-  },
-  {
-    id: 3,
-    name: "PASSION BREEZE",
-    subtext: "Passion Fruit, Soda, Crushed Ice",
-    image: "/images/passion_breeze.png",
-    accentColor: "#e58a2b",
-    textColorClass: "text-brand-orange-text",
-    landscapeGrad: "from-amber-200/50 via-orange-100/30 to-amber-50/20",
-    bgStyle: "rgba(250, 240, 223, 0.90)",
-  },
-  {
-    id: 4,
-    name: "LIME FRESH",
-    subtext: "Organic Lime Juice, Fresh Mint, Soda",
-    image: "/images/lime_fresh.png",
-    accentColor: "#73b83e",
-    textColorClass: "text-brand-green-text",
-    landscapeGrad: "from-emerald-200/50 via-green-100/30 to-emerald-50/20",
-    bgStyle: "rgba(235, 248, 233, 0.90)",
-  },
-];
-
-// 4× duplication for seamless infinite loop
-const itemsList = [...carouselDrinks, ...carouselDrinks, ...carouselDrinks, ...carouselDrinks];
-
-// Individual card with 3D tilt on hover
-function ProductCard({ item }: { item: CarouselDrink }) {
+// Individual card with 3D tilt on hover (Desktop only)
+function ProductCard({ item }: { item: Drink }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
 
@@ -102,6 +50,10 @@ function ProductCard({ item }: { item: CarouselDrink }) {
     setTilt({ rotateX: 0, rotateY: 0 });
   }, []);
 
+  const handleDiscoverClick = () => {
+    document.getElementById("worlds-section")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <motion.div
       ref={cardRef}
@@ -109,8 +61,9 @@ function ProductCard({ item }: { item: CarouselDrink }) {
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onClick={handleDiscoverClick}
       data-card
-      className="w-[280px] h-[390px] md:w-[320px] md:h-[430px] flex-shrink-0 rounded-[2.5rem] flex flex-col justify-between p-7 relative overflow-hidden gleam-effect card-hover border border-white/60 shadow-[0_12px_30px_rgba(15,108,189,0.03)]"
+      className="w-[280px] h-[390px] md:w-[320px] md:h-[430px] flex-shrink-0 rounded-[2.5rem] flex flex-col justify-between p-7 relative overflow-hidden gleam-effect card-hover border border-white/60 shadow-[0_12px_30px_rgba(15,108,189,0.03)] cursor-pointer"
       style={{
         transform: `perspective(800px) rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg)`,
         transition: "transform 250ms cubic-bezier(.22,.61,.36,1)",
@@ -130,7 +83,7 @@ function ProductCard({ item }: { item: CarouselDrink }) {
           {item.name}
         </span>
         <span className="text-[10px] md:text-xs font-bold text-brand-slate/80">
-          {item.subtext}
+          {item.ingredients.join(" • ")}
         </span>
       </div>
 
@@ -157,18 +110,13 @@ function ProductCard({ item }: { item: CarouselDrink }) {
   );
 }
 
-import { useIsMobile } from "@/hooks/useIsMobile";
-
-function MobileProductCard({ item }: { item: CarouselDrink }) {
-  const handleDiscoverClick = () => {
-    document.getElementById("worlds-section")?.scrollIntoView({ behavior: "smooth" });
-  };
-
+// Mobile Card: Tap only, opens Bottom Sheet (PROD-2)
+function MobileProductCard({ item, onClick }: { item: Drink; onClick: (id: string) => void }) {
   return (
     <motion.div
       whileTap={{ scale: 1.03 }}
-      onClick={handleDiscoverClick}
-      className="w-[170px] h-[250px] rounded-[1.8rem] flex flex-col justify-between p-4 relative overflow-hidden border border-white/40 shadow-[0_8px_20px_rgba(15,108,189,0.02)]"
+      onClick={() => onClick(item.id)}
+      className="w-[170px] h-[250px] rounded-[1.8rem] flex flex-col justify-between p-4 relative overflow-hidden border border-white/40 shadow-[0_8px_20px_rgba(15,108,189,0.02)] cursor-pointer"
       style={{
         background: item.bgStyle,
         backdropFilter: "blur(8px)",
@@ -181,7 +129,7 @@ function MobileProductCard({ item }: { item: CarouselDrink }) {
           {item.name}
         </span>
         <span className="text-[8px] font-bold text-brand-slate/75 line-clamp-1">
-          {item.subtext}
+          {item.ingredients.join(" • ")}
         </span>
       </div>
 
@@ -208,7 +156,11 @@ function MobileProductCard({ item }: { item: CarouselDrink }) {
   );
 }
 
-export default function InfiniteCarousel() {
+interface InfiniteCarouselProps {
+  onDrinkClick?: (id: string) => void;
+}
+
+export default function InfiniteCarousel({ onDrinkClick = () => {} }: InfiniteCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
   const isMobile = useIsMobile();
@@ -227,7 +179,7 @@ export default function InfiniteCarousel() {
     if (!track) return;
 
     const totalItems = track.children.length;
-    const singleSetCount = carouselDrinks.length;
+    const singleSetCount = PRODUCTS.length;
     const singleSetWidth = track.scrollWidth / (totalItems / singleSetCount);
 
     const initTween = () => {
@@ -311,7 +263,7 @@ export default function InfiniteCarousel() {
         onComplete: () => {
           if (tweenRef.current) {
             const trackWidth = trackRef.current!.scrollWidth;
-            const singleSetWidth = trackWidth / (itemsList.length / carouselDrinks.length);
+            const singleSetWidth = trackWidth / (itemsList.length / PRODUCTS.length);
             const currentX = finalTranslate % singleSetWidth;
             gsap.set(trackRef.current, { x: currentX });
             tweenRef.current.play();
@@ -350,8 +302,8 @@ export default function InfiniteCarousel() {
         {isMobile ? (
           <div className="flex flex-col items-center space-y-8 w-full">
             <div className="grid grid-cols-2 gap-4 justify-items-center w-full max-w-[360px]">
-              {carouselDrinks.map((item) => (
-                <MobileProductCard key={item.id} item={item} />
+              {PRODUCTS.map((item) => (
+                <MobileProductCard key={item.id} item={item} onClick={onDrinkClick} />
               ))}
             </div>
             {/* Mobile Separator */}

@@ -3,14 +3,17 @@
 import React, { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { Heart, MessageCircle, Play } from "lucide-react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 /* ═══════════════════════════════════════════════════════════════
    INSTAGRAM FEED — Scene 8: Magazine Community
    
-   Title: "Join the MOQ Community"
-   Magazine-style layout: Varied card sizes (2:3, 1:1, 3:2)
-   Hover: Zoom (scale 1.05, 250ms), reflection sweep, lift, glass overlay
-   Premium magazine feel — not an Instagram embed
+   Optimized for mobile V2:
+   - Staggered masonry (large/medium alternating) via 2-column mobile layout
+   - 16px gaps on mobile (gap-4)
+   - Shorter card heights (tall: 220px, square: 180px, wide: 140px)
+   - Reduced vertical section padding (~50% height savings)
+   - Keeps premium desktop design untouched
    ═══════════════════════════════════════════════════════════════ */
 
 interface InstaPost {
@@ -20,7 +23,6 @@ interface InstaPost {
   comments: string;
   gradient: string;
   description: string;
-  /** Aspect ratio variant for magazine layout */
   aspect: "tall" | "square" | "wide";
 }
 
@@ -63,16 +65,16 @@ const instaPosts: InstaPost[] = [
   },
 ];
 
-// Height mapping for magazine layout
+// Height mapping for mobile V2 masonry and desktop
 const aspectHeight: Record<string, string> = {
-  tall: "h-[420px] md:h-[480px]",
-  square: "h-[320px] md:h-[380px]",
-  wide: "h-[280px] md:h-[320px]",
+  tall: "h-[220px] md:h-[480px]",
+  square: "h-[180px] md:h-[380px]",
+  wide: "h-[140px] md:h-[320px]",
 };
 
-function InstaCard({ post, index }: { post: InstaPost; index: number }) {
+function InstaCard({ post, index, isMobile }: { post: InstaPost; index: number; isMobile: boolean }) {
   const ref = useRef<HTMLAnchorElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-80px" });
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
     <motion.a
@@ -80,14 +82,15 @@ function InstaCard({ post, index }: { post: InstaPost; index: number }) {
       href="https://instagram.com"
       target="_blank"
       rel="noopener noreferrer"
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{
         duration: 0.8,
         delay: index * 0.1,
         ease: [0.16, 1, 0.3, 1],
       }}
-      whileHover={{ y: -6, scale: 1.02 }}
+      whileHover={isMobile ? undefined : { y: -6, scale: 1.02 }}
+      whileTap={isMobile ? { scale: 0.98 } : undefined}
       data-card
       className={`glass rounded-[2rem] ${aspectHeight[post.aspect]} flex flex-col justify-between overflow-hidden border border-white/80 shadow-[0_15px_40px_rgba(15,108,189,0.02)] relative group cursor-pointer gleam-effect`}
     >
@@ -95,38 +98,40 @@ function InstaCard({ post, index }: { post: InstaPost; index: number }) {
       <div className={`absolute inset-0 bg-gradient-to-b ${post.gradient} pointer-events-none z-0`} />
 
       {/* Type indicator & avatar */}
-      <div className="p-6 flex justify-between items-center relative z-10 w-full">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-full bg-white/80 border border-white flex items-center justify-center font-black text-[9px] text-brand-navy">
+      <div className={`${isMobile ? "p-4" : "p-6"} flex justify-between items-center relative z-10 w-full`}>
+        <div className="flex items-center space-x-2 md:space-x-3">
+          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white/80 border border-white flex items-center justify-center font-black text-[7px] md:text-[9px] text-brand-navy">
             MQ
           </div>
-          <span className="text-[10px] font-black text-brand-navy tracking-wide">@moqdrink</span>
+          <span className="text-[8px] md:text-[10px] font-black text-brand-navy tracking-wide">@moqdrink</span>
         </div>
         {post.type === "reel" && (
-          <div className="w-7 h-7 rounded-full bg-brand-navy text-white flex items-center justify-center shadow-md">
-            <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+          <div className="w-5 h-5 md:w-7 md:h-7 rounded-full bg-brand-navy text-white flex items-center justify-center shadow-md">
+            <Play className="w-2.5 h-2.5 fill-current ml-0.5" />
           </div>
         )}
       </div>
 
-      {/* Hover overlay */}
-      <div className="absolute inset-0 bg-brand-navy/30 opacity-0 group-hover:opacity-100 transition-opacity duration-[var(--duration-hover)] flex items-center justify-center space-x-8 z-20 pointer-events-none">
-        <div className="flex items-center space-x-2 text-white font-black text-sm">
-          <Heart className="w-5 h-5 fill-current" />
-          <span>{post.likes}</span>
+      {/* Hover overlay (hidden on mobile, interaction is tap-only link) */}
+      {!isMobile && (
+        <div className="absolute inset-0 bg-brand-navy/30 opacity-0 group-hover:opacity-100 transition-opacity duration-[var(--duration-hover)] flex items-center justify-center space-x-8 z-20 pointer-events-none">
+          <div className="flex items-center space-x-2 text-white font-black text-sm">
+            <Heart className="w-5 h-5 fill-current" />
+            <span>{post.likes}</span>
+          </div>
+          <div className="flex items-center space-x-2 text-white font-black text-sm">
+            <MessageCircle className="w-5 h-5 fill-current" />
+            <span>{post.comments}</span>
+          </div>
         </div>
-        <div className="flex items-center space-x-2 text-white font-black text-sm">
-          <MessageCircle className="w-5 h-5 fill-current" />
-          <span>{post.comments}</span>
-        </div>
-      </div>
+      )}
 
       {/* Footer */}
-      <div className="p-6 border-t border-brand-blue-text/10 bg-white/30 backdrop-blur-md relative z-10 w-full flex flex-col space-y-1">
-        <p className="text-[11px] font-semibold text-brand-slate line-clamp-1">
+      <div className={`${isMobile ? "p-4" : "p-6"} border-t border-brand-blue-text/10 bg-white/30 backdrop-blur-md relative z-10 w-full flex flex-col space-y-0.5 md:space-y-1`}>
+        <p className={`font-semibold text-brand-slate line-clamp-1 ${isMobile ? "text-[9px]" : "text-[11px]"}`}>
           {post.description}
         </p>
-        <span className="text-[9px] font-black tracking-widest text-brand-blue-text uppercase">
+        <span className={`font-black tracking-widest text-brand-blue-text uppercase ${isMobile ? "text-[7px]" : "text-[9px]"}`}>
           {post.type}
         </span>
       </div>
@@ -135,14 +140,22 @@ function InstaCard({ post, index }: { post: InstaPost; index: number }) {
 }
 
 export default function InstagramFeed() {
+  const isMobile = useIsMobile();
+
+  if (isMobile === null) {
+    return (
+      <section id="instagram" className="relative py-20 w-full overflow-hidden px-6 flex justify-center items-center scene min-h-[300px]" />
+    );
+  }
+
   return (
     <section
       id="instagram"
-      className="relative py-40 w-full overflow-hidden px-6 md:px-12 flex justify-center items-center scene"
+      className="relative w-full overflow-hidden flex justify-center items-center scene py-16 md:py-40 px-6 md:px-12"
     >
-      <div className="max-w-[1280px] w-full flex flex-col space-y-16 z-20">
+      <div className="max-w-[1280px] w-full flex flex-col space-y-10 md:space-y-16 z-20">
         {/* Editorial Heading */}
-        <div className="flex flex-col items-start space-y-3 text-left">
+        <div className="flex flex-col items-start space-y-2 md:space-y-3 text-left">
           <span className="type-label text-brand-blue-text">
             SOSYAL TOPLULUK
           </span>
@@ -154,10 +167,10 @@ export default function InstagramFeed() {
           </p>
         </div>
 
-        {/* Magazine grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
+        {/* Magazine grid (2 columns on mobile for staggered masonry, 3 columns on desktop) */}
+        <div className={`grid gap-4 md:gap-8 w-full ${isMobile ? "grid-cols-2" : "grid-cols-3"}`}>
           {instaPosts.map((post, index) => (
-            <InstaCard key={post.id} post={post} index={index} />
+            <InstaCard key={post.id} post={post} index={index} isMobile={isMobile} />
           ))}
         </div>
       </div>

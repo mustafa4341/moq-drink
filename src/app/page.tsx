@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
 import SmoothScroll from "@/components/SmoothScroll";
 import CinematicLoading from "@/components/CinematicLoading";
 import WorldBackground from "@/components/WorldBackground";
@@ -16,6 +17,12 @@ import MoodFinderSection from "@/components/MoodFinderSection";
 import Philosophy from "@/components/Philosophy";
 import InstagramFeed from "@/components/InstagramFeed";
 import Footer from "@/components/Footer";
+
+// Centralized product data
+import { PRODUCTS, type Drink } from "@/lib/product-data";
+
+// Dynamically import BottomSheet to optimize mobile bundle sizes (ARCH-3)
+const BottomSheet = dynamic(() => import("@/components/BottomSheet"), { ssr: false });
 
 /* ═══════════════════════════════════════════════════════════════
    MOQ DRINK — Page Assembly
@@ -45,6 +52,8 @@ import Footer from "@/components/Footer";
 
 export default function Home() {
   const [isEntered, setIsEntered] = useState(false);
+  const [selectedDrink, setSelectedDrink] = useState<Drink | null>(null);
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
 
   const handleEntranceComplete = useCallback(() => {
     setIsEntered(true);
@@ -63,6 +72,14 @@ export default function Home() {
     document.getElementById("mood-finder")?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
+  const handleDrinkClick = useCallback((drinkId: string) => {
+    const drink = PRODUCTS.find((d) => d.id === drinkId);
+    if (drink) {
+      setSelectedDrink(drink);
+      setIsBottomSheetOpen(true);
+    }
+  }, []);
+
   return (
     <div className="relative min-h-screen text-brand-navy selection:bg-brand-blue-bg selection:text-brand-blue-text">
       {/* Scene 0: Cinematic Loading Sequence */}
@@ -73,7 +90,12 @@ export default function Home() {
           {/* 11-Layer Living Background (always present) */}
           <WorldBackground />
 
-
+          {/* Mobile Bottom Sheet Overlay (dynamic, client-side only) */}
+          <BottomSheet
+            drink={selectedDrink}
+            isOpen={isBottomSheetOpen}
+            onClose={() => setIsBottomSheetOpen(false)}
+          />
 
           {/* Optional Ambient Sound Toggle */}
           <AmbientSound />
@@ -96,7 +118,8 @@ export default function Home() {
               />
 
               {/* Scene 2: Flavor Collection — The Gallery */}
-              <InfiniteCarousel />
+              <InfiniteCarousel onDrinkClick={handleDrinkClick} />
+
 
               {/* Transition: Carousel → Drink Worlds */}
               <TransitionText

@@ -327,65 +327,7 @@ export default function ProductWorlds() {
   }
 
   if (isMobile) {
-    return (
-      <section id="worlds-section" className="relative w-full py-12 px-6 flex flex-col items-center scene bg-[#f0f7fd]">
-        <div className="max-w-[1280px] w-full flex flex-col space-y-6">
-          <div className="flex flex-col items-start space-y-2">
-            <span className="type-label text-brand-blue-text">EGZOTİK DENEYİMLER</span>
-            <h2 className="type-scene-title text-brand-navy font-sans">ÜRÜN DÜNYALARI</h2>
-          </div>
-          
-          {/* Scroll snap container */}
-          <div
-            ref={scrollRef}
-            onScroll={handleContainerScroll}
-            className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none w-full space-x-6 pb-2"
-          >
-            {worldsData.map((world) => (
-              <div
-                key={world.id}
-                className="snap-start w-full flex-shrink-0 flex flex-col items-center bg-white/40 border border-white/60 p-6 rounded-[2rem] shadow-sm"
-                style={{ backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
-              >
-                <span className={`text-[10px] font-black tracking-wider ${world.textColor} mb-2`}>
-                  {world.tagline}
-                </span>
-                <h3 className="text-xl font-black text-brand-navy tracking-tight mb-4">
-                  {world.name}
-                </h3>
-                
-                {/* Large responsive drink image inside aspect portal */}
-                <div className="relative w-full aspect-[3/4] max-w-[200px] rounded-t-full overflow-hidden border border-white/60 bg-white/5 shadow-lg mb-6">
-                  <Image
-                    src={world.image}
-                    alt={world.name}
-                    fill
-                    sizes="350px"
-                    className="object-cover animate-float-medium"
-                  />
-                </div>
-                
-                <p className="text-center text-xs font-semibold text-brand-slate leading-relaxed max-w-xs">
-                  {world.description}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Dot Indicators */}
-          <div className="flex space-x-2 justify-center pt-2">
-            {worldsData.map((_, i) => (
-              <div
-                key={i}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  activeSlide === i ? "w-6 bg-brand-blue-text" : "w-2 bg-brand-slate/20"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   return (
