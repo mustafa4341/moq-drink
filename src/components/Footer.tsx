@@ -62,7 +62,7 @@ export default function Footer() {
         {/* Links */}
         <div className="flex flex-col space-y-2 text-xs font-black tracking-widest text-[#fbe6e5] uppercase">
           <a
-            href="https://instagram.com"
+            href="https://www.instagram.com/moqdrink/"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center space-x-2 py-3 px-6 min-h-[44px]"
@@ -216,7 +216,7 @@ export default function Footer() {
         <div className="flex flex-wrap justify-center items-center gap-x-10 gap-y-6 text-xs font-black tracking-widest text-[#fbe6e5] uppercase">
           <Magnetic range={25} strength={0.3}>
             <a
-              href="https://instagram.com"
+              href="https://www.instagram.com/moqdrink/"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-white flex items-center space-x-2 transition-colors duration-300"

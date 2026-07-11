@@ -78,7 +78,7 @@ function InstaCard({ post, index }: { post: InstaPost; index: number }) {
   return (
     <motion.a
       ref={ref}
-      href="https://instagram.com"
+      href="https://www.instagram.com/moqdrink/"
       target="_blank"
       rel="noopener noreferrer"
       initial={{ opacity: 0, y: 20 }}
