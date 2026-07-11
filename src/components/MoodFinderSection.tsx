@@ -33,7 +33,7 @@ const LOADING_MESSAGES = [
 const LOADING_INTERVAL = 1100; // ms per message
 
 export default function MoodFinderSection() {
-  const [step, setStep] = useState<"form" | "loading" | "result">("form");
+  const [step, setStep] = useState<"intro" | "form" | "loading" | "result">("intro");
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -98,7 +98,7 @@ export default function MoodFinderSection() {
   };
 
   const handleReset = () => {
-    setStep("form");
+    setStep("intro");
     setMobileStep("welcome");
     setResult(null);
     setVisibleMessages(0);
@@ -159,19 +159,57 @@ export default function MoodFinderSection() {
         {/* Header */}
         <div className="flex flex-col items-center space-y-3 text-center">
           <span className="type-label text-brand-orange-text">
-            MOQ'UN KALBİ
+            GERÇEK TAT, GERÇEK SEN.
           </span>
           <h2 className="type-scene-title text-brand-navy font-sans">
-            MODUNU BUL
+            MOQ'UNU BUL
           </h2>
-          <p className="type-body text-brand-slate max-w-md">
-            Günü sadece yaşama, hisset. MOQ dünyasına ismini bırak ve bugünün lezzetini keşfet.
+          <p className="type-body text-brand-slate max-w-xl">
+            Belki enerjin Merida kadar canlıdır. Belki de Sunset kadar sakindir. Bunu öğrenmenin tek yolu var. İsmini bırak. Doğum tarihini ekle. Gerisini MOQ merak etsin.
           </p>
         </div>
 
         {/* Center Glass Portal */}
         <div className="w-full max-w-lg glass border border-white/95 rounded-[2.5rem] p-8 md:p-12 shadow-[0_30px_70px_rgba(229,138,43,0.06)] relative overflow-hidden flex flex-col items-center min-h-[460px]">
           <AnimatePresence mode="wait">
+            {/* ════════════════════════════════════════════════════
+                STAGE 0 — INTRO
+               ════════════════════════════════════════════════════ */}
+            {step === "intro" && (
+              <motion.div
+                key="intro"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full flex flex-col items-center justify-center space-y-8 py-8"
+              >
+                {/* Visual Drink Cup Placeholder or Sparkles */}
+                <div className="relative w-28 h-28 flex items-center justify-center rounded-full bg-brand-orange-bg/40 border border-white/50 shadow-inner">
+                  <Sparkles className="w-10 h-10 text-brand-orange-text animate-pulse" />
+                </div>
+                
+                <p className="text-xs font-semibold text-brand-slate leading-relaxed text-center max-w-sm">
+                  MOQ ile frekansını eşitlemeye hazır mısın? Bilgilerini gir, bugünkü enerjine en uygun MOQ lezzetini ve hayat elementini bul.
+                </p>
+
+                <div className="w-full pt-2">
+                  <Magnetic range={30} strength={0.35} className="w-full block">
+                    <button
+                      onClick={() => {
+                        setStep("form");
+                        setMobileStep("name"); // Skip welcome step on mobile
+                      }}
+                      className="w-full group flex items-center justify-center space-x-2 bg-brand-orange-text text-white font-black text-xs tracking-widest py-4.5 rounded-full shadow-[0_5px_15px_rgba(229,138,43,0.2)] hover:shadow-[0_10px_25px_rgba(229,138,43,0.35)] transition-all duration-[var(--duration-hover)] hover:scale-[1.02] cursor-pointer pulse-glow-moq"
+                    >
+                      <span>MOQ'UNU BUL</span>
+                      <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" />
+                    </button>
+                  </Magnetic>
+                </div>
+              </motion.div>
+            )}
+
             {/* ════════════════════════════════════════════════════
                 STAGE 1 — FORM
                ════════════════════════════════════════════════════ */}
@@ -355,7 +393,7 @@ function DesktopForm({
             type="submit"
             className="w-full group flex items-center justify-center space-x-2 bg-brand-orange-text text-white font-black text-xs tracking-widest py-4.5 rounded-full shadow-[0_5px_15px_rgba(229,138,43,0.2)] hover:shadow-[0_10px_25px_rgba(229,138,43,0.35)] transition-all duration-[var(--duration-hover)] hover:scale-[1.02] cursor-pointer pulse-glow-moq"
           >
-            <span>MODUMU BUL</span>
+            <span>MOQ'UNU BUL</span>
             <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" />
           </button>
         </Magnetic>
@@ -492,9 +530,9 @@ function MobileFormFlow({
           </p>
           <button
             onClick={onSubmit}
-            className="w-full py-4.5 bg-brand-orange-text text-white font-black text-xs tracking-widest rounded-full shadow-md"
+            className="w-full py-4.5 bg-brand-orange-text text-white font-black text-xs tracking-widest rounded-full shadow-md animate-pulse"
           >
-            MODUMU GÖSTER
+            MOQ'UNU BUL
           </button>
         </motion.div>
       )}
