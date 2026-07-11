@@ -57,9 +57,9 @@ function PhilosophyCard({ item, index }: { item: PhilosophyItem; index: number }
         delay: index * 0.15,
         ease: [0.16, 1, 0.3, 1],
       }}
-      whileHover={{ y: -8 }}
+      whileHover={{ y: -8, boxShadow: "0 20px 45px rgba(15,108,189,0.06)" }}
       data-card
-      className={`glass rounded-[2rem] border border-white/80 shadow-[0_15px_40px_rgba(15,108,189,0.02)] relative overflow-hidden gleam-effect card-hover cursor-default flex flex-col justify-between transition-all duration-300
+      className={`glass rounded-[2rem] border border-white/80 shadow-[0_15px_40px_rgba(15,108,189,0.02)] relative overflow-hidden gleam-effect cursor-default flex flex-col justify-between
         p-5 md:p-10 h-[230px] md:min-h-[380px]
         ${isOdd 
           ? "text-left items-start mr-8 md:mr-0 md:text-left md:items-start" 
