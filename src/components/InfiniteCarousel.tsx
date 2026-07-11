@@ -4,30 +4,15 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import gsap from "gsap";
-import { useIsMobile } from "@/hooks/useIsMobile";
 import { PRODUCTS, type Drink } from "@/lib/product-data";
 
 /* ═══════════════════════════════════════════════════════════════
    INFINITE CAROUSEL — Scene 2: Flavor Gallery (The Collection)
    
-   Section header: Label + Title + Subtitle
-   Infinite horizontal carousel (GSAP, 25s linear loop, 4× duplication)
-   Pause on hover, resume on leave
-   Touch drag with momentum
-   
-   Product Card (420×520):
-     - Landscape background image + glass overlay gradient
-     - Product image centered (65% height, floating)
-     - Product name + description
-     - "KEŞFET" button
-   
-   Hover chain (all within 250ms):
-     1. Lift: translateY(-12px)
-     2. 3D Tilt: perspective + rotateX/Y based on mouse
-     3. Scale: 1.03
-     4. Glow: box-shadow with flavor accent
-     5. Reflection sweep: ::after gradient slides
-     6. Pause carousel
+   Optimized for V2 & SSR-safe:
+   - Uses CSS responsive display utilities (hidden md:block and md:hidden)
+   - Zero layout flashes / hydration jumps (isMobile state removed from JSX)
+   - GSAP carousel autoplay initialized only on desktop screen dimensions client-side
    ═══════════════════════════════════════════════════════════════ */
 
 // 4× duplication for seamless infinite loop on desktop
@@ -163,7 +148,6 @@ interface InfiniteCarouselProps {
 export default function InfiniteCarousel({ onDrinkClick = () => {} }: InfiniteCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
-  const isMobile = useIsMobile();
 
   // Dragging state
   const isDragging = useRef(false);
@@ -174,7 +158,10 @@ export default function InfiniteCarousel({ onDrinkClick = () => {} }: InfiniteCa
   const lastX = useRef(0);
 
   useEffect(() => {
-    if (isMobile) return;
+    // Only initialize GSAP loop client-side on desktop views
+    const isMobileView = window.innerWidth < 768;
+    if (isMobileView) return;
+
     const track = trackRef.current;
     if (!track) return;
 
@@ -204,7 +191,7 @@ export default function InfiniteCarousel({ onDrinkClick = () => {} }: InfiniteCa
       clearTimeout(timer);
       if (tweenRef.current) tweenRef.current.kill();
     };
-  }, [isMobile]);
+  }, []);
 
   const handleMouseEnter = () => {
     if (!isDragging.current && tweenRef.current) tweenRef.current.pause();
@@ -273,12 +260,6 @@ export default function InfiniteCarousel({ onDrinkClick = () => {} }: InfiniteCa
     }
   }, []);
 
-  if (isMobile === null) {
-    return (
-      <section id="carousel-section" className="relative py-12 md:py-24 w-full px-6 flex flex-col items-center scene min-h-[300px]" />
-    );
-  }
-
   return (
     <section
       id="carousel-section"
@@ -298,43 +279,42 @@ export default function InfiniteCarousel({ onDrinkClick = () => {} }: InfiniteCa
           </p>
         </div>
 
-        {/* Carousel Track (Desktop) or 2x2 Grid (Mobile) */}
-        {isMobile ? (
-          <div className="flex flex-col items-center space-y-8 w-full">
-            <div className="grid grid-cols-2 gap-4 justify-items-center w-full max-w-[360px]">
-              {PRODUCTS.map((item) => (
-                <MobileProductCard key={item.id} item={item} onClick={onDrinkClick} />
-              ))}
-            </div>
-            {/* Mobile Separator */}
-            <div className="flex items-center justify-center space-x-4 w-full py-4 opacity-50">
-              <div className="h-[1px] bg-brand-slate/20 w-12" />
-              <span className="text-[10px] font-black tracking-widest text-brand-slate uppercase">
-                Dünyalara Adım Atın
-              </span>
-              <div className="h-[1px] bg-brand-slate/20 w-12" />
-            </div>
+        {/* Mobile View (Statically Rendered, Hidden on Desktop via CSS) */}
+        <div className="flex flex-col items-center space-y-8 w-full md:hidden">
+          <div className="grid grid-cols-2 gap-4 justify-items-center w-full max-w-[360px]">
+            {PRODUCTS.map((item) => (
+              <MobileProductCard key={item.id} item={item} onClick={onDrinkClick} />
+            ))}
           </div>
-        ) : (
-          <div
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            onMouseDown={(e) => handleDragStart(e.clientX)}
-            onMouseMove={(e) => handleDragMove(e.clientX)}
-            onMouseUp={handleDragEnd}
-            onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
-            onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
-            onTouchEnd={handleDragEnd}
-            data-drag-hint="true"
-            className="infinite-carousel w-full overflow-hidden cursor-grab active:cursor-grabbing py-6 flex"
-          >
-            <div ref={trackRef} className="flex space-x-8 will-change-transform">
-              {itemsList.map((item, index) => (
-                <ProductCard key={`${item.id}-${index}`} item={item} />
-              ))}
-            </div>
+          {/* Mobile Separator */}
+          <div className="flex items-center justify-center space-x-4 w-full py-4 opacity-50">
+            <div className="h-[1px] bg-brand-slate/20 w-12" />
+            <span className="text-[10px] font-black tracking-widest text-brand-slate uppercase">
+              Dünyalara Adım Atın
+            </span>
+            <div className="h-[1px] bg-brand-slate/20 w-12" />
           </div>
-        )}
+        </div>
+
+        {/* Desktop View (Statically Rendered, Hidden on Mobile via CSS) */}
+        <div
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onMouseDown={(e) => handleDragStart(e.clientX)}
+          onMouseMove={(e) => handleDragMove(e.clientX)}
+          onMouseUp={handleDragEnd}
+          onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+          onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+          onTouchEnd={handleDragEnd}
+          data-drag-hint="true"
+          className="infinite-carousel w-full overflow-hidden cursor-grab active:cursor-grabbing py-6 flex hidden md:block"
+        >
+          <div ref={trackRef} className="flex space-x-8 will-change-transform">
+            {itemsList.map((item, index) => (
+              <ProductCard key={`${item.id}-${index}`} item={item} />
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

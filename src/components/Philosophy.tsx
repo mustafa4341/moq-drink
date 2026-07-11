@@ -2,16 +2,13 @@
 
 import React, { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { useIsMobile } from "@/hooks/useIsMobile";
 
 /* ═══════════════════════════════════════════════════════════════
    PHILOSOPHY — Scene 7: The Soul
    
-   Optimized for mobile V2:
-   - Compact alternating alignment (odd: left, even: right) on mobile
-   - Card height compressed to 220px-260px on mobile
-   - Smaller padding and typography on mobile devices
-   - 100% identical grid layout on desktop
+   Optimized for mobile V2 & SSR-safe:
+   - Alternating alignments on mobile, standard grid on desktop via CSS
+   - Zero hydration mismatch: uses purely responsive Tailwind classes
    ═══════════════════════════════════════════════════════════════ */
 
 interface PhilosophyItem {
@@ -45,7 +42,7 @@ const philosophyItems: PhilosophyItem[] = [
   },
 ];
 
-function PhilosophyCard({ item, index, isMobile }: { item: PhilosophyItem; index: number; isMobile: boolean }) {
+function PhilosophyCard({ item, index }: { item: PhilosophyItem; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
   const isOdd = index % 2 === 0;
@@ -60,28 +57,26 @@ function PhilosophyCard({ item, index, isMobile }: { item: PhilosophyItem; index
         delay: index * 0.15,
         ease: [0.16, 1, 0.3, 1],
       }}
-      whileHover={isMobile ? undefined : { y: -8 }}
-      whileTap={isMobile ? { scale: 0.99 } : undefined}
+      whileHover={{ y: -8 }}
       data-card
       className={`glass rounded-[2rem] border border-white/80 shadow-[0_15px_40px_rgba(15,108,189,0.02)] relative overflow-hidden gleam-effect card-hover cursor-default flex flex-col justify-between transition-all duration-300
-        ${isMobile 
-          ? `p-5 h-[230px] ${isOdd ? "text-left items-start mr-8" : "text-right items-end ml-8"}` 
-          : "p-10 min-h-[380px] text-left"
+        p-5 md:p-10 h-[230px] md:min-h-[380px]
+        ${isOdd 
+          ? "text-left items-start mr-8 md:mr-0 md:text-left md:items-start" 
+          : "text-right items-end ml-8 md:ml-0 md:text-left md:items-start"
         }
       `}
     >
-      <div className={`flex flex-col ${isMobile ? "space-y-1.5" : "space-y-4"}`}>
-        <span className={`font-black tracking-widest text-brand-blue-text uppercase ${isMobile ? "text-[8px]" : "text-[9px]"}`}>
+      <div className="flex flex-col space-y-1.5 md:space-y-4">
+        <span className="font-black tracking-widest text-brand-blue-text uppercase text-[8px] md:text-[9px]">
           {item.tagline}
         </span>
-        <h3 className={`font-black tracking-wide text-brand-navy font-sans uppercase ${isMobile ? "text-xl" : "text-3xl"}`}>
+        <h3 className="font-black tracking-wide text-brand-navy font-sans uppercase text-xl md:text-3xl">
           {item.title}
         </h3>
       </div>
 
-      <p className={`font-semibold text-brand-slate leading-relaxed border-t border-brand-blue-text/10 
-        ${isMobile ? "text-[11px] pt-3 mt-2" : "text-sm pt-6"}`}
-      >
+      <p className="font-semibold text-brand-slate leading-relaxed border-t border-brand-blue-text/10 text-[11px] md:text-sm pt-3 mt-2 md:pt-6 md:mt-0">
         {item.description}
       </p>
     </motion.div>
@@ -89,14 +84,6 @@ function PhilosophyCard({ item, index, isMobile }: { item: PhilosophyItem; index
 }
 
 export default function Philosophy() {
-  const isMobile = useIsMobile();
-
-  if (isMobile === null) {
-    return (
-      <section id="philosophy" className="relative py-20 w-full overflow-hidden px-6 flex justify-center items-center scene min-h-[250px]" />
-    );
-  }
-
   return (
     <section
       id="philosophy"
@@ -114,9 +101,9 @@ export default function Philosophy() {
         </div>
 
         {/* Philosophy Cards layout (vertical list for mobile, grid for desktop) */}
-        <div className={`grid w-full gap-6 md:gap-10 ${isMobile ? "grid-cols-1" : "grid-cols-3"}`}>
+        <div className="grid w-full gap-6 md:gap-10 grid-cols-1 md:grid-cols-3">
           {philosophyItems.map((item, index) => (
-            <PhilosophyCard key={item.id} item={item} index={index} isMobile={isMobile} />
+            <PhilosophyCard key={item.id} item={item} index={index} />
           ))}
         </div>
       </div>

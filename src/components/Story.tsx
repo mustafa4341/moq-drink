@@ -5,7 +5,6 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useIsMobile } from "@/hooks/useIsMobile";
 import { timelineRegistry } from "@/lib/animation/TimelineRegistry";
 
 // Ensure ScrollTrigger is registered client-side
@@ -16,12 +15,12 @@ if (typeof window !== "undefined") {
 /* ═══════════════════════════════════════════════════════════════
    STORY — Scene 4: The Origin (Cinematic 4-Scene Short Film)
    
-   Optimized for mobile V2:
+   Optimized for mobile V2 & SSR-safe:
    - Uses gsap.matchMedia() for breakpoint-conditional scroll animations
    - Shorter scroll height (200vh vs 400vh) and faster timings on mobile
    - Automatically cleans up ScrollTrigger & timeline instances using gsap.context()
    - Keeps storytelling but reduces typography scale & spacing on mobile
-   - Disables particle drift layers on mobile to preserve GPU fillrate
+   - Purely responsive CSS classes for layout structure (no hydration flashes)
    ═══════════════════════════════════════════════════════════════ */
 
 export default function Story() {
@@ -44,8 +43,6 @@ export default function Story() {
 
   // Spotlight Ref
   const spotlightRef = useRef<HTMLDivElement>(null);
-
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -87,7 +84,7 @@ export default function Story() {
 
         if (blossomsLayer) {
           gsap.set(blossomsLayer, {
-            opacity: isMobileView ? 0 : 0.8, // Disable falling petals on mobile to optimize performance
+            opacity: isMobileView ? 0 : 0.8,
             "--particle-color-1": "rgba(165, 214, 255, 0.85)",
             "--particle-color-2": "rgba(220, 238, 255, 0.75)",
           });
@@ -185,10 +182,6 @@ export default function Story() {
     document.getElementById("mood-finder")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  if (isMobile === null) {
-    return <section id="story" className="relative w-full min-h-[50vh] bg-[#EAF6FF]" />;
-  }
-
   return (
     <section
       ref={containerRef}
@@ -215,13 +208,11 @@ export default function Story() {
           />
         </div>
 
-        {/* Layer 2: Moving Continuous Clouds (Desktop Only) */}
-        {!isMobile && (
-          <div className="absolute inset-0 pointer-events-none select-none z-0 overflow-hidden opacity-[0.05]">
-            <div className="absolute top-[8%] left-[-15%] w-[450px] h-[180px] bg-white rounded-full blur-3xl animate-[cloud-drift-slow_50s_linear_infinite]" />
-            <div className="absolute top-[35%] right-[-15%] w-[550px] h-[220px] bg-white rounded-full blur-3xl animate-[cloud-drift-fast_40s_linear_infinite]" />
-          </div>
-        )}
+        {/* Layer 2: Moving Continuous Clouds (Desktop Only via CSS) */}
+        <div className="absolute inset-0 pointer-events-none select-none z-0 overflow-hidden opacity-[0.05] hidden md:block">
+          <div className="absolute top-[8%] left-[-15%] w-[450px] h-[180px] bg-white rounded-full blur-3xl animate-[cloud-drift-slow_50s_linear_infinite]" />
+          <div className="absolute top-[35%] right-[-15%] w-[550px] h-[220px] bg-white rounded-full blur-3xl animate-[cloud-drift-fast_40s_linear_infinite]" />
+        </div>
 
         {/* Layer 3: Spotlight Glow */}
         <div
@@ -305,49 +296,47 @@ export default function Story() {
           </svg>
         </div>
 
-        {/* S1, S2, S3: Dynamic-color Leaves and Petals falling (Desktop Only) */}
-        {!isMobile && (
-          <div
-            ref={blossomsLayerRef}
-            className="blossoms-layer absolute inset-0 pointer-events-none select-none z-1 overflow-hidden"
-            style={{
-              opacity: 0.8,
-              "--particle-color-1": "rgba(165, 214, 255, 0.85)", // Soft baby blue
-              "--particle-color-2": "rgba(220, 238, 255, 0.75)", // Light sky blue
-            } as React.CSSProperties}
-          >
-            {[...Array(12)].map((_, i) => {
-              const size = 20 + (i % 3) * 8; // 20-36px for high visibility
-              const delay = i * 0.8;
-              const left = 5 + (i * 13) % 90;
-              const duration = 8 + (i % 4) * 3;
-              const isBlossom = i % 2 === 0;
+        {/* S1, S2, S3: Dynamic-color Leaves and Petals falling (Desktop Only via CSS) */}
+        <div
+          ref={blossomsLayerRef}
+          className="blossoms-layer absolute inset-0 pointer-events-none select-none z-1 overflow-hidden hidden md:block"
+          style={{
+            opacity: 0.8,
+            "--particle-color-1": "rgba(165, 214, 255, 0.85)",
+            "--particle-color-2": "rgba(220, 238, 255, 0.75)",
+          } as React.CSSProperties}
+        >
+          {[...Array(12)].map((_, i) => {
+            const size = 20 + (i % 3) * 8; // 20-36px for high visibility
+            const delay = i * 0.8;
+            const left = 5 + (i * 13) % 90;
+            const duration = 8 + (i % 4) * 3;
+            const isBlossom = i % 2 === 0;
 
-              return (
-                <svg
-                  key={i}
-                  viewBox="0 0 100 100"
-                  className="absolute"
-                  style={{
-                    width: `${size}px`,
-                    height: `${size}px`,
-                    left: `${left}%`,
-                    top: `-5%`,
-                    fill: isBlossom ? "var(--particle-color-1)" : "var(--particle-color-2)",
-                    animation: `leaf-fall ${duration}s linear infinite`,
-                    animationDelay: `${delay}s`,
-                  }}
-                >
-                  {isBlossom ? (
-                    <path d="M50,0 C60,20 80,30 80,50 C80,75 50,90 50,90 C50,90 20,75 20,50 C20,30 40,20 50,0 Z" />
-                  ) : (
-                    <path d="M50,10 C70,30 75,60 50,90 C25,60 30,30 50,10 Z" />
-                  )}
-                </svg>
-              );
-            })}
-          </div>
-        )}
+            return (
+              <svg
+                key={i}
+                viewBox="0 0 100 100"
+                className="absolute"
+                style={{
+                  width: `${size}px`,
+                  height: `${size}px`,
+                  left: `${left}%`,
+                  top: `-5%`,
+                  fill: isBlossom ? "var(--particle-color-1)" : "var(--particle-color-2)",
+                  animation: `leaf-fall ${duration}s linear infinite`,
+                  animationDelay: `${delay}s`,
+                }}
+              >
+                {isBlossom ? (
+                  <path d="M50,0 C60,20 80,30 80,50 C80,75 50,90 50,90 C50,90 20,75 20,50 C20,30 40,20 50,0 Z" />
+                ) : (
+                  <path d="M50,10 C70,30 75,60 50,90 C25,60 30,30 50,10 Z" />
+                )}
+              </svg>
+            );
+          })}
+        </div>
 
         {/* Layer 6: Cinematic Text Scenes Container */}
         <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 w-full h-full max-w-4xl mx-auto">

@@ -4,19 +4,14 @@ import React, { useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import Magnetic from "@/components/ui/Magnetic";
-import { useIsMobile } from "@/hooks/useIsMobile";
 
 /* ═══════════════════════════════════════════════════════════════
    PRODUCT WORLDS — Scene 3: The Journey (4 living worlds)
    
-   4 full-screen (100vh) worlds, each a complete living environment:
-     1. Blue Mojito — Ice Cave (snow particles, ice crystals, mist)
-     2. Berry Boost — Cherry Blossom Forest (falling petals, light rays, fireflies)
-     3. Passion Breeze — Tropical Island (birds, palm fronds, water sparkle)
-     4. Lime Fresh — Green Valley (leaves, morning mist, light beams, dewdrops)
-   
-   Transitions: Background crossfade via opacity, 200px overlap
-   Particle systems fade in/out with world visibility
+   Optimized for V2 & SSR-safe:
+   - Statically rendered, hidden on mobile via CSS (hidden md:block)
+   - Zero layout flashes or hydration jumps (isMobile state removed from root component)
+   - Particle canvas initialized client-side only on desktop screens
    ═══════════════════════════════════════════════════════════════ */
 
 interface WorldConfig {
@@ -37,7 +32,7 @@ const worldsData: WorldConfig[] = [
     name: "BLUE MOJITO",
     tagline: "KRİSTAL FERAHLIK",
     themeTitle: "BUZ MAĞARASI",
-    description: "Derin buz mağaralarının serinliği, donmuş kristaller ve saf dağ kaynaklarının berraklığı. Her yudumda kutup rüzgarlarının ferahlığını hisset.",
+    description: "Derin buz mağaralarının serinliği, donmuş kristaller and saf dağ kaynaklarının berraklığı. Her yudumda kutup rüzgarlarının ferahlığını hisset.",
     image: "/images/blue_mojito.png",
     bgGrad: "from-blue-100/60 via-sky-50/30 to-blue-200/40",
     textColor: "text-brand-blue-text",
@@ -48,7 +43,7 @@ const worldsData: WorldConfig[] = [
     name: "BERRY BOOST",
     tagline: "ENERJİ DOLU TUTKU",
     themeTitle: "KİRAZ ORMANI",
-    description: "Pembe kiraz ağaçlarının altında bir yürüyüş. Düşen çiçek yaprakları ve taze orman meyvelerinin tatlı patlaması.",
+    description: "Pembe kiraz ağaçlarının altında bir yürüyüş. Düşen çiçek yaprakları and taze orman meyvelerinin tatlı patlaması.",
     image: "/images/berry_boost.png",
     bgGrad: "from-pink-100/60 via-rose-50/30 to-pink-200/40",
     textColor: "text-brand-pink-text",
@@ -59,7 +54,7 @@ const worldsData: WorldConfig[] = [
     name: "PASSION BREEZE",
     tagline: "EGZOTİK KAÇAMAK",
     themeTitle: "TROPİKAL ADA",
-    description: "Altın kumlu plajlarda gün doğumu, ılık deniz meltemi ve sallanan palmiye yaprakları. Egzotik çarkıfelek meyvesinin tropik enerjisiyle tazelen.",
+    description: "Altın kumlu plajlarda gün doğumu, ılık deniz meltemi and sallanan palmiye yaprakları. Egzotik çarkıfelek meyvesinin tropik enerjisiyle tazelen.",
     image: "/images/passion_breeze.png",
     bgGrad: "from-amber-100/60 via-orange-50/30 to-amber-200/40",
     textColor: "text-brand-orange-text",
@@ -69,8 +64,8 @@ const worldsData: WorldConfig[] = [
     id: 4,
     name: "LIME FRESH",
     tagline: "SADE VE DOĞAL",
-    themeTitle: "YEŞİL VADI",
-    description: "Akdeniz'in yemyeşil doğası ve sabah çiyiyle yıkanmış limon bahçeleri. Taze nane yaprakları ve organik lime özlerinin canlandırıcı dengesi.",
+    themeTitle: "YEŞİL VADİ",
+    description: "Akdeniz'in yemyeşil doğası and sabah çiyiyle yıkanmış limon bahçeleri. Taze nane yaprakları and organik lime özlerinin canlandırıcı dengesi.",
     image: "/images/lime_fresh.png",
     bgGrad: "from-emerald-100/60 via-green-50/30 to-emerald-200/40",
     textColor: "text-brand-green-text",
@@ -78,20 +73,20 @@ const worldsData: WorldConfig[] = [
   },
 ];
 
-// World-specific particle canvas
+// World-specific particle canvas (Desktop client-side only)
 function WorldParticles({ worldId, color }: { worldId: number; color: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isMobile, setIsMobile] = React.useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
-  React.useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+  useEffect(() => {
+    setIsDesktop(window.innerWidth >= 768);
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
-    if (isMobile) return;
+    if (!isDesktop) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -151,7 +146,6 @@ function WorldParticles({ worldId, color }: { worldId: number; color: string }) 
         ctx.globalAlpha = p.opacity;
 
         if (worldId === 1) {
-          // Ice crystals — diamond shapes
           ctx.beginPath();
           ctx.moveTo(0, -p.r);
           ctx.lineTo(p.r, 0);
@@ -161,19 +155,16 @@ function WorldParticles({ worldId, color }: { worldId: number; color: string }) 
           ctx.fillStyle = color;
           ctx.fill();
         } else if (worldId === 2) {
-          // Cherry blossom petals — ellipses
           ctx.beginPath();
           ctx.ellipse(0, 0, p.r, p.r * 1.6, 0, 0, Math.PI * 2);
           ctx.fillStyle = color;
           ctx.fill();
         } else if (worldId === 3) {
-          // Tropical sparkles — circles
           ctx.beginPath();
           ctx.arc(0, 0, p.r * 0.8, 0, Math.PI * 2);
           ctx.fillStyle = color;
           ctx.fill();
         } else {
-          // Green valley leaves — small elongated shapes
           ctx.beginPath();
           ctx.ellipse(0, 0, p.r * 0.7, p.r * 2, 0, 0, Math.PI * 2);
           ctx.fillStyle = color;
@@ -191,9 +182,9 @@ function WorldParticles({ worldId, color }: { worldId: number; color: string }) 
       window.removeEventListener("resize", resize);
       cancelAnimationFrame(animationId);
     };
-  }, [worldId, color, isMobile]);
+  }, [worldId, color, isDesktop]);
 
-  if (isMobile) return null;
+  if (!isDesktop) return null;
 
   return (
     <canvas
@@ -205,11 +196,11 @@ function WorldParticles({ worldId, color }: { worldId: number; color: string }) 
 
 function WorldSection({ world }: { world: WorldConfig }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [isMobile, setIsMobile] = React.useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
-  React.useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+  useEffect(() => {
+    setIsDesktop(window.innerWidth >= 768);
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -231,20 +222,16 @@ function WorldSection({ world }: { world: WorldConfig }) {
         className={`min-h-screen w-full flex items-center justify-center relative py-32 px-6 md:px-12 bg-gradient-to-b ${world.bgGrad}`}
       >
         {/* World-specific ambient effects */}
-        {!isMobile && world.id === 1 && (
-          /* Ice cave: Mist at bottom */
+        {isDesktop && world.id === 1 && (
           <div className="absolute bottom-0 left-0 w-full h-[30%] blur-3xl pointer-events-none opacity-30 bg-gradient-to-t from-blue-200/50 to-transparent" />
         )}
-        {!isMobile && world.id === 2 && (
-          /* Cherry blossom: Diagonal light rays */
+        {isDesktop && world.id === 2 && (
           <div className="absolute top-0 right-[20%] w-[40%] h-full pointer-events-none opacity-[0.08]" style={{ background: "linear-gradient(135deg, rgba(255,180,200,0.6) 0%, transparent 60%)" }} />
         )}
-        {!isMobile && world.id === 3 && (
-          /* Tropical: Sun flare from top-right */
+        {isDesktop && world.id === 3 && (
           <div className="absolute top-0 right-0 w-[50%] h-[60vh] pointer-events-none opacity-20" style={{ background: "radial-gradient(ellipse at 90% 0%, rgba(255,200,80,0.6) 0%, transparent 55%)" }} />
         )}
-        {!isMobile && world.id === 4 && (
-          /* Green valley: Morning mist rising */
+        {isDesktop && world.id === 4 && (
           <div className="absolute bottom-[10%] left-0 w-full h-24 blur-2xl pointer-events-none opacity-20 bg-gradient-to-t from-emerald-100/60 to-transparent" />
         )}
 
@@ -310,28 +297,8 @@ function WorldSection({ world }: { world: WorldConfig }) {
 }
 
 export default function ProductWorlds() {
-  const isMobile = useIsMobile();
-  const [activeSlide, setActiveSlide] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const handleContainerScroll = () => {
-    if (!scrollRef.current) return;
-    const width = scrollRef.current.clientWidth;
-    const scrollLeft = scrollRef.current.scrollLeft;
-    const index = Math.round(scrollLeft / width);
-    setActiveSlide(index);
-  };
-
-  if (isMobile === null) {
-    return <section id="worlds-section" className="relative w-full min-h-[50vh] bg-[#f0f7fd]" />;
-  }
-
-  if (isMobile) {
-    return null;
-  }
-
   return (
-    <section id="worlds-section" className="relative w-full overflow-hidden scene">
+    <section id="worlds-section" className="relative w-full overflow-hidden scene hidden md:block">
       {worldsData.map((world) => (
         <WorldSection key={world.id} world={world} />
       ))}
