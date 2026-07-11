@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { ChevronDown } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════
    TRANSITION TEXT — Reusable cinematic transitions between scenes
@@ -37,9 +39,6 @@ interface TransitionTextProps {
   className?: string;
 }
 
-import { useIsMobile } from "@/hooks/useIsMobile";
-import { ChevronDown } from "lucide-react";
-
 export default function TransitionText({
   lines,
   align = "center",
@@ -50,20 +49,25 @@ export default function TransitionText({
 }: TransitionTextProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  
+  // Use inView triggering on mobile for absolute reliability & smoothness (regardless of scroll speed)
+  const inView = useInView(containerRef, { once: false, amount: 0.35 });
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start end", "end start"],
   });
 
-  // Map scroll progress to opacity, scale, y for fade in/out
-  const opacity = useTransform(scrollYProgress, [0.3, 0.5, 0.7], [0, 1, 0]);
-  const scale = useTransform(scrollYProgress, [0.3, 0.5, 0.7], [0.95, 1, 0.95]);
-  const y = useTransform(scrollYProgress, [0.3, 0.5, 0.7], [30, 0, -30]);
+  // Map scroll progress to opacity, scale, y for fade in/out (Desktop scroll parallax)
+  const opacityScroll = useTransform(scrollYProgress, [0.3, 0.5, 0.7], [0, 1, 0]);
+  const scaleScroll = useTransform(scrollYProgress, [0.3, 0.5, 0.7], [0.95, 1, 0.95]);
+  const yScroll = useTransform(scrollYProgress, [0.3, 0.5, 0.7], [30, 0, -30]);
 
   const isFirstTransition = lines[0] === "Her lezzetin";
   const isDuplicateTransition = lines[0] === "Dünyalara adım atın.";
-  const sectionHeight = isMobile ? (isFirstTransition ? "260px" : "140px") : "50vh";
+  
+  // Increase heights on mobile slightly to give scrolling more natural vertical spacing
+  const sectionHeight = isMobile ? (isFirstTransition ? "280px" : "200px") : "50vh";
 
   if (isMobile && isDuplicateTransition) {
     return null;
@@ -76,7 +80,14 @@ export default function TransitionText({
       style={{ height: sectionHeight }}
     >
       <motion.div
-        style={{ opacity, scale, y }}
+        // On mobile: Animate smoothly via native inView events. On desktop: Bind dynamically to scroll progress.
+        style={isMobile ? undefined : { opacity: opacityScroll, scale: scaleScroll, y: yScroll }}
+        animate={isMobile ? {
+          opacity: inView ? 1 : 0,
+          scale: inView ? 1 : 0.96,
+          y: inView ? 0 : 25,
+        } : undefined}
+        transition={isMobile ? { duration: 0.55, ease: [0.16, 1, 0.3, 1] } : undefined}
         className={`flex flex-col ${align === "center" ? "items-center" : "items-start"} space-y-1`}
       >
         {lines.map((line, index) => (
@@ -112,7 +123,9 @@ export default function TransitionText({
 
       {/* Mist overlay during transition */}
       <motion.div
-        style={{ opacity }}
+        style={isMobile ? undefined : { opacity: opacityScroll }}
+        animate={isMobile ? { opacity: inView ? 0.8 : 0 } : undefined}
+        transition={isMobile ? { duration: 0.5 } : undefined}
         className="absolute inset-0 pointer-events-none"
       >
         <div

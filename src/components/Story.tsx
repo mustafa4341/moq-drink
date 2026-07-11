@@ -95,7 +95,7 @@ export default function Story() {
             trigger: container,
             start: "top top",
             end: "bottom bottom",
-            scrub: isMobileView ? 1.0 : 1.8, // Faster, snappier scrub duration on mobile
+            scrub: isMobileView ? true : 1.8, // Lock instantly to finger scroll coordinates on mobile to prevent laggy drag/snapping
             invalidateOnRefresh: true,
           },
         });
