@@ -200,7 +200,7 @@ export default function Story() {
           className="absolute inset-0 z-0 pointer-events-none select-none w-full h-full transition-all duration-1000"
         >
           <Image
-            src="/images/moq_collage.png"
+            src="/images/moq_collage.webp"
             alt="MOQ Brand Collage Background"
             fill
             className="object-cover object-center animate-fade-in"
@@ -231,7 +231,7 @@ export default function Story() {
             className="absolute left-[8%] md:left-[15%] top-[30%] md:top-[20%] w-[130px] md:w-[320px] h-[240px] md:h-[500px] animate-[float-drink_6s_ease-in-out_infinite]"
           >
             <Image
-              src="/images/blue_mojito.png"
+              src="/images/blue_mojito.webp"
               alt="Blue Mojito Highlight"
               fill
               className="object-contain"
@@ -246,7 +246,7 @@ export default function Story() {
             className="absolute right-[8%] md:right-[15%] top-[30%] md:top-[20%] w-[130px] md:w-[320px] h-[240px] md:h-[500px] animate-[float-drink-delayed_6s_ease-in-out_infinite]"
           >
             <Image
-              src="/images/passion_breeze.png"
+              src="/images/passion_breeze.webp"
               alt="Passion Breeze Highlight"
               fill
               className="object-contain"
@@ -260,7 +260,7 @@ export default function Story() {
             className="absolute left-1/2 top-[30%] md:top-[20%] -translate-x-1/2 w-[130px] md:w-[320px] h-[240px] md:h-[500px] animate-[float-drink_7s_ease-in-out_infinite]"
           >
             <Image
-              src="/images/berry_boost.png"
+              src="/images/berry_boost.webp"
               alt="Berry Boost Highlight"
               fill
               className="object-contain"

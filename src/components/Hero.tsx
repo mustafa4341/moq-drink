@@ -86,7 +86,7 @@ export default function Hero() {
         className="absolute inset-0 z-0 select-none pointer-events-none"
       >
         <Image
-          src="/images/hero_background.png"
+          src="/images/hero_background.webp"
           alt="MOQ Hero Background"
           fill
           priority
