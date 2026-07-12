@@ -75,6 +75,8 @@ export default function WorldBackground() {
 
   // GSAP ScrollTrigger to animate stacked layers based on scroll position (bypasses React renders)
   useEffect(() => {
+    // We animate Layer 1 (Midday), 2 (Afternoon), 3 (Golden Hour), and 4 (Sunset) opacities on all devices including mobile.
+
     const container = layersContainerRef.current;
     if (!container) return;
     const layers = container.children;

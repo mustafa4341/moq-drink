@@ -5,7 +5,6 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { timelineRegistry } from "@/lib/animation/TimelineRegistry";
 
 // Ensure ScrollTrigger is registered client-side
 if (typeof window !== "undefined") {
@@ -96,12 +95,16 @@ export default function Story() {
             trigger: container,
             start: "top top",
             end: "bottom bottom",
-            scrub: isMobileView ? 1.2 : 1.8, // 1.2 provides a beautiful smooth deceleration on mobile
+            scrub: 1.8, // Identical on both mobile and desktop — same cinematic pacing
             invalidateOnRefresh: true,
           },
         });
 
-        timelineRegistry.register("story-timeline", tl);
+        // NOTE: Do NOT register with timelineRegistry here. The registry's register()
+        // calls unregister() first, which kills the previous timeline's ScrollTrigger.
+        // Since matchMedia creates two timelines (one per breakpoint), the second
+        // register() would kill the first one's ScrollTrigger — leaving the active
+        // breakpoint with a dead trigger. gsap.context().revert() handles cleanup.
 
         // TRANSITION 1: Scene 1 ➔ Scene 2 (Progress: 0.20 ➔ 0.30)
         tl.to(bg, { backgroundColor: "#FFE8C5", duration: 0.10 }, 0.20)
@@ -177,8 +180,7 @@ export default function Story() {
     }, 1500);
 
     return () => {
-      ctx.revert(); // Robust unmount cleanup (GSAP-2)
-      timelineRegistry.unregister("story-timeline");
+      ctx.revert(); // gsap.context reverts ALL tweens/timelines/set() within scope — handles cleanup
       clearTimeout(refreshTimer);
     };
   }, []);

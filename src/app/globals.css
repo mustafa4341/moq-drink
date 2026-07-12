@@ -68,6 +68,19 @@
   --color-brand-slate: #5e6f88;
   --color-brand-button: #d8eafa;
 
+  /* Extended brand palette (8 drinks) */
+  --color-brand-red-bg: #fce8eb;
+  --color-brand-red-text: #E63946;
+
+  --color-brand-gold-bg: #fef7e0;
+  --color-brand-gold-text: #c9a800;
+
+  --color-brand-sunset-bg: #fff0e6;
+  --color-brand-sunset-text: #d4622b;
+
+  --color-brand-stone-bg: #eef1f5;
+  --color-brand-stone-text: #5e6f88;
+
   /* Easing Curves */
   --ease-moq: cubic-bezier(.22, .61, .36, 1);
   --ease-moq-inout: cubic-bezier(0.76, 0, 0.24, 1);
@@ -216,7 +229,10 @@ html {
 }
 
 body {
-  background: #F7FAFF;
+  /* PERF: Match WorldBackground's Morning mobile gradient start color so that
+     when the fixed background layer is scrolled past, the body underneath is the
+     SAME tone — no white gap peeking through during fast scroll. */
+  background: #fdf7f4;
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   cursor: none;

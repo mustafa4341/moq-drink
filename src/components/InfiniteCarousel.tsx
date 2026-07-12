@@ -1,23 +1,16 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import Image from "next/image";
+import React, { useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import gsap from "gsap";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { PRODUCTS, type Drink } from "@/lib/product-data";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import ProductVisual from "./ProductVisual";
 
 /* ═══════════════════════════════════════════════════════════════
    INFINITE CAROUSEL — Scene 2: Flavor Gallery (The Collection)
-   
-   Optimized for V2 & SSR-safe:
-   - Uses CSS responsive display utilities (hidden md:block and md:hidden)
-   - Zero layout flashes / hydration jumps (isMobile state removed from JSX)
-   - GSAP carousel autoplay initialized only on desktop screen dimensions client-side
+   Unified 8 MOQ drinks with edge-approaching navigation buttons.
    ═══════════════════════════════════════════════════════════════ */
-
-// 4× duplication for seamless infinite loop on desktop
-const itemsList = [...PRODUCTS, ...PRODUCTS, ...PRODUCTS, ...PRODUCTS];
 
 // Individual card with 3D tilt on hover (Desktop only)
 function ProductCard({ item }: { item: Drink }) {
@@ -37,7 +30,24 @@ function ProductCard({ item }: { item: Drink }) {
   }, []);
 
   const handleDiscoverClick = () => {
-    document.getElementById("worlds-section")?.scrollIntoView({ behavior: "smooth" });
+    // Teleportation "Camera Zoom" and blur effect on the main layout
+    const appWrapper = document.querySelector("main");
+    if (appWrapper) {
+      appWrapper.style.transition = "transform 900ms cubic-bezier(0.16, 1, 0.3, 1), filter 900ms ease";
+      appWrapper.style.transform = "scale(0.96) translateY(-15px)";
+      appWrapper.style.filter = "blur(3px)";
+      
+      setTimeout(() => {
+        appWrapper.style.transform = "scale(1) translateY(0)";
+        appWrapper.style.filter = "none";
+      }, 600);
+    }
+
+    // Smooth scroll to the specific drink world section
+    const el = document.getElementById(`world-section-${item.id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
@@ -60,7 +70,7 @@ function ProductCard({ item }: { item: Drink }) {
       {/* Accent glow on hover */}
       <div
         className="absolute -top-8 -right-8 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none z-0"
-        style={{ backgroundColor: item.accentColor }}
+        style={{ backgroundColor: item.colors.primary }}
       />
 
       {/* Card Top Information */}
@@ -73,17 +83,16 @@ function ProductCard({ item }: { item: Drink }) {
         </span>
       </div>
 
-      {/* Middle square image box matching the mockup */}
+      {/* Middle visual illustration */}
       <div className="w-full flex justify-center items-center my-2 relative z-[2]">
-        <div className="relative w-full aspect-square max-w-[170px] md:max-w-[200px] rounded-[1.8rem] overflow-hidden shadow-md border border-white/40">
-          <Image
-            src={item.image}
-            alt={item.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 170px, 200px"
-          />
-        </div>
+        <ProductVisual
+          image={item.image}
+          name={item.name}
+          emoji={item.emoji}
+          colors={item.colors}
+          size="md"
+          className="rounded-[1.8rem]"
+        />
       </div>
 
       {/* Card CTA */}
@@ -96,13 +105,13 @@ function ProductCard({ item }: { item: Drink }) {
   );
 }
 
-// Mobile Card: Tap only, opens Bottom Sheet (PROD-2)
+// Mobile Card: Tap only, opens Bottom Sheet
 function MobileProductCard({ item, onClick }: { item: Drink; onClick: (id: string) => void }) {
   return (
     <motion.div
       whileTap={{ scale: 1.03 }}
       onClick={() => onClick(item.id)}
-      className="w-[170px] h-[250px] rounded-[1.8rem] flex flex-col justify-between p-4 relative overflow-hidden border border-white/40 shadow-[0_8px_20px_rgba(15,108,189,0.02)] cursor-pointer"
+      className="w-[170px] h-[250px] rounded-[1.8rem] flex-shrink-0 flex flex-col justify-between p-4 relative overflow-hidden border border-white/40 shadow-[0_8px_20px_rgba(15,108,189,0.02)] cursor-pointer"
       style={{
         background: item.bgStyle,
       }}
@@ -117,17 +126,16 @@ function MobileProductCard({ item, onClick }: { item: Drink; onClick: (id: strin
         </span>
       </div>
 
-      {/* Drink Image Box */}
+      {/* Drink Visual */}
       <div className="w-full flex justify-center items-center my-1 z-[2]">
-        <div className="relative w-full aspect-square max-w-[100px] rounded-[1.2rem] overflow-hidden shadow-sm border border-white/30">
-          <Image
-            src={item.image}
-            alt={item.name}
-            fill
-            sizes="350px"
-            className="object-cover"
-          />
-        </div>
+        <ProductVisual
+          image={item.image}
+          name={item.name}
+          emoji={item.emoji}
+          colors={item.colors}
+          size="sm"
+          className="rounded-[1.2rem]"
+        />
       </div>
 
       {/* Card CTA */}
@@ -145,125 +153,68 @@ interface InfiniteCarouselProps {
 }
 
 export default function InfiniteCarousel({ onDrinkClick = () => {} }: InfiniteCarouselProps) {
-  const trackRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
-  const tweenRef = useRef<gsap.core.Tween | null>(null);
 
-  // Dragging state
-  const isDragging = useRef(false);
-  const startX = useRef(0);
-  const prevTranslate = useRef(0);
-  const dragVelocity = useRef(0);
-  const lastTime = useRef(0);
-  const lastX = useRef(0);
+  // Mouse coordinate tracking for edge-approaching buttons
+  const [isHovered, setIsHovered] = useState(false);
+  const [hoverLeft, setHoverLeft] = useState(false);
+  const [hoverRight, setHoverRight] = useState(false);
 
-  useEffect(() => {
-    // Only initialize GSAP loop client-side on desktop views
-    const isMobileView = window.innerWidth < 768;
-    if (isMobileView) return;
+  // Mobile page tracking
+  const [activePage, setActivePage] = useState(0);
+  const mobileScrollRef = useRef<HTMLDivElement>(null);
 
-    const track = trackRef.current;
-    if (!track) return;
+  const handleMobileScroll = () => {
+    if (!mobileScrollRef.current) return;
+    const scrollLeft = mobileScrollRef.current.scrollLeft;
+    const width = mobileScrollRef.current.clientWidth;
+    if (width > 0) {
+      const page = Math.round(scrollLeft / width);
+      setActivePage(page);
+    }
+  };
 
-    const totalItems = track.children.length;
-    const singleSetCount = PRODUCTS.length;
-    const singleSetWidth = track.scrollWidth / (totalItems / singleSetCount);
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!wrapperRef.current || isMobile) return;
+    const rect = wrapperRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const width = rect.width;
 
-    const initTween = () => {
-      if (tweenRef.current) tweenRef.current.kill();
-
-      tweenRef.current = gsap.to(track, {
-        x: -singleSetWidth,
-        duration: 25,
-        ease: "none",
-        repeat: -1,
-        modifiers: {
-          x: gsap.utils.unitize((x) => {
-            const val = parseFloat(x) % singleSetWidth;
-            return `${val}px`;
-          }),
-        },
-      });
-    };
-
-    const timer = setTimeout(initTween, 500);
-    return () => {
-      clearTimeout(timer);
-      if (tweenRef.current) tweenRef.current.kill();
-    };
-  }, []);
-
-  const handleMouseEnter = () => {
-    if (!isDragging.current && tweenRef.current) tweenRef.current.pause();
+    setIsHovered(true);
+    
+    // Proximity threshold of 240px from container edges
+    setHoverLeft(mouseX < 240);
+    setHoverRight(mouseX > width - 240);
   };
 
   const handleMouseLeave = () => {
-    if (!isDragging.current && tweenRef.current) tweenRef.current.play();
-    handleDragEnd();
+    setIsHovered(false);
+    setHoverLeft(false);
+    setHoverRight(false);
   };
 
-  const handleDragStart = useCallback((clientX: number) => {
-    isDragging.current = true;
-    startX.current = clientX;
-    lastX.current = clientX;
-    lastTime.current = performance.now();
-    dragVelocity.current = 0;
-    if (tweenRef.current) tweenRef.current.pause();
-
-    const matrix = window.getComputedStyle(trackRef.current!).transform;
-    if (matrix !== "none") {
-      const parts = matrix.split(",");
-      prevTranslate.current = parseFloat(parts[4] || "0");
-    }
-  }, []);
-
-  const handleDragMove = useCallback((clientX: number) => {
-    if (!isDragging.current || !trackRef.current) return;
-    const now = performance.now();
-    const dt = now - lastTime.current;
-    const dx = clientX - lastX.current;
-    if (dt > 0) dragVelocity.current = dx / dt;
-
-    const deltaX = clientX - startX.current;
-    gsap.set(trackRef.current, { x: prevTranslate.current + deltaX });
-    lastX.current = clientX;
-    lastTime.current = now;
-  }, []);
-
-  const handleDragEnd = useCallback(() => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    const glideAmt = dragVelocity.current * 180;
-
-    if (trackRef.current) {
-      const matrix = window.getComputedStyle(trackRef.current).transform;
-      let finalTranslate = 0;
-      if (matrix !== "none") {
-        const parts = matrix.split(",");
-        finalTranslate = parseFloat(parts[4] || "0") + glideAmt;
-      }
-
-      gsap.to(trackRef.current, {
-        x: finalTranslate,
-        duration: 0.8,
-        ease: "power2.out",
-        onComplete: () => {
-          if (tweenRef.current) {
-            const trackWidth = trackRef.current!.scrollWidth;
-            const singleSetWidth = trackWidth / (itemsList.length / PRODUCTS.length);
-            const currentX = finalTranslate % singleSetWidth;
-            gsap.set(trackRef.current, { x: currentX });
-            tweenRef.current.play();
-          }
-        },
-      });
-    }
-  }, []);
+  const handleScroll = (direction: "left" | "right") => {
+    if (!containerRef.current) return;
+    
+    // Scroll by card width (320px) + gap (32px) = 352px
+    const scrollAmount = 352;
+    const targetScroll = containerRef.current.scrollLeft + (direction === "right" ? scrollAmount : -scrollAmount);
+    
+    containerRef.current.scrollTo({
+      left: targetScroll,
+      behavior: "smooth",
+    });
+  };
 
   return (
     <section
       id="carousel-section"
-      className="relative py-12 md:py-24 w-full overflow-hidden px-6 md:px-12 flex flex-col items-center select-none scene"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="relative py-12 md:py-24 w-full overflow-hidden px-6 md:px-12 flex flex-col items-center select-none scene group"
+      style={{ contentVisibility: "auto", containIntrinsicSize: "auto 600px" }}
     >
       <div className="max-w-[1280px] w-full flex flex-col space-y-8 md:space-y-12 relative z-20">
         {/* Editorial Section Header */}
@@ -279,44 +230,97 @@ export default function InfiniteCarousel({ onDrinkClick = () => {} }: InfiniteCa
           </p>
         </div>
 
-        {/* Mobile View */}
+        {/* Mobile View: Paged 2x2 Grid Carousel (4 and 4 pagination) */}
         {isMobile && (
-          <div className="flex flex-col items-center space-y-8 w-full">
-            <div className="grid grid-cols-2 gap-4 justify-items-center w-full max-w-[360px]">
-              {PRODUCTS.map((item) => (
-                <MobileProductCard key={item.id} item={item} onClick={onDrinkClick} />
-              ))}
+          <div className="flex flex-col items-center space-y-5 w-full">
+            
+            {/* Horizontal Scroll Track containing two 2x2 Grid Pages */}
+            <div 
+              ref={mobileScrollRef}
+              onScroll={handleMobileScroll}
+              className="flex overflow-x-auto scrollbar-none snap-x snap-mandatory w-full py-4 overflow-y-hidden"
+            >
+              {/* Page 1: First 4 Drinks */}
+              <div className="w-full flex-shrink-0 snap-center px-4 flex justify-center">
+                <div className="grid grid-cols-2 gap-4 justify-items-center w-full max-w-[360px]">
+                  {PRODUCTS.slice(0, 4).map((item) => (
+                    <MobileProductCard key={item.id} item={item} onClick={onDrinkClick} />
+                  ))}
+                </div>
+              </div>
+
+              {/* Page 2: Next 4 Drinks */}
+              <div className="w-full flex-shrink-0 snap-center px-4 flex justify-center">
+                <div className="grid grid-cols-2 gap-4 justify-items-center w-full max-w-[360px]">
+                  {PRODUCTS.slice(4, 8).map((item) => (
+                    <MobileProductCard key={item.id} item={item} onClick={onDrinkClick} />
+                  ))}
+                </div>
+              </div>
             </div>
-            {/* Mobile Separator */}
-            <div className="flex items-center justify-center space-x-4 w-full py-4 opacity-50">
-              <div className="h-[1px] bg-brand-slate/20 w-12" />
-              <span className="text-[10px] font-black tracking-widest text-brand-slate uppercase">
-                Dünyalara Adım Atın
+
+            {/* Premium Apple-Style Glass Dots Indicator */}
+            <div className="flex justify-center items-center space-x-2.5 py-1 px-4 rounded-full bg-white/30 backdrop-blur-md border border-white/40 shadow-sm">
+              <div className={`w-2 h-2 rounded-full transition-all duration-300 ${activePage === 0 ? "bg-brand-navy scale-125" : "bg-brand-navy/30"}`} />
+              <div className={`w-2 h-2 rounded-full transition-all duration-300 ${activePage === 1 ? "bg-brand-navy scale-125" : "bg-brand-navy/30"}`} />
+            </div>
+            
+            {/* Mobile Swipe Hint */}
+            <div className="flex items-center justify-center space-x-3 w-full opacity-40">
+              <div className="h-[1px] bg-brand-slate/20 w-8" />
+              <span className="text-[9px] font-black tracking-widest text-brand-slate uppercase">
+                {activePage === 0 ? "Diğer 4 Lezzet için Kaydırın ➔" : "⬅ İlk 4 Lezzete Dönün"}
               </span>
-              <div className="h-[1px] bg-brand-slate/20 w-12" />
+              <div className="h-[1px] bg-brand-slate/20 w-8" />
             </div>
           </div>
         )}
 
-        {/* Desktop View */}
+        {/* Desktop View: Button Navigated Scroll Track */}
         {isMobile === false && (
-          <div
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            onMouseDown={(e) => handleDragStart(e.clientX)}
-            onMouseMove={(e) => handleDragMove(e.clientX)}
-            onMouseUp={handleDragEnd}
-            onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
-            onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
-            onTouchEnd={handleDragEnd}
-            data-drag-hint="true"
-            className="infinite-carousel w-full overflow-hidden cursor-grab active:cursor-grabbing py-6 flex"
+          <div 
+            ref={wrapperRef}
+            className="relative w-full flex items-center group/carousel"
           >
-            <div ref={trackRef} className="flex space-x-8 will-change-transform">
-              {itemsList.map((item, index) => (
-                <ProductCard key={`${item.id}-${index}`} item={item} />
+            
+            {/* Prev Edge Button - Apple Glassmorphic style, appears on proximity */}
+            <button
+              onClick={() => handleScroll("left")}
+              aria-label="Önceki"
+              className={`absolute left-4 md:left-6 z-30 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 text-brand-navy flex items-center justify-center cursor-pointer transition-all duration-300 shadow-[0_8px_32px_rgba(26,37,60,0.08)] active:scale-95 hover:bg-white/35 hover:border-white/40 ${
+                isHovered && hoverLeft 
+                  ? "opacity-100 translate-x-0 scale-110 pointer-events-auto" 
+                  : "opacity-0 translate-x-[-15px] pointer-events-none"
+              }`}
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
+            {/* Next Edge Button - Apple Glassmorphic style, appears on proximity */}
+            <button
+              onClick={() => handleScroll("right")}
+              aria-label="Sonraki"
+              className={`absolute right-4 md:right-6 z-30 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 text-brand-navy flex items-center justify-center cursor-pointer transition-all duration-300 shadow-[0_8px_32px_rgba(26,37,60,0.08)] active:scale-95 hover:bg-white/35 hover:border-white/40 ${
+                isHovered && hoverRight 
+                  ? "opacity-100 translate-x-0 scale-110 pointer-events-auto" 
+                  : "opacity-0 translate-x-[15px] pointer-events-none"
+              }`}
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+
+            {/* Scroll Container */}
+            <div
+              ref={containerRef}
+              className="flex space-x-8 overflow-x-auto scrollbar-none scroll-smooth w-full py-4 px-4 snap-x snap-mandatory"
+            >
+              {PRODUCTS.map((item) => (
+                <div key={item.id} className="snap-start flex-shrink-0">
+                  <ProductCard item={item} />
+                </div>
               ))}
             </div>
+
           </div>
         )}
       </div>

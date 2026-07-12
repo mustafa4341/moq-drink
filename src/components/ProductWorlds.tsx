@@ -1,92 +1,22 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import Image from "next/image";
+import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring } from "framer-motion";
 import Magnetic from "@/components/ui/Magnetic";
+import { PRODUCTS, type Drink } from "@/lib/product-data";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import ProductVisual from "./ProductVisual";
 
 /* ═══════════════════════════════════════════════════════════════
-   PRODUCT WORLDS — Scene 3: The Journey (4 living worlds)
-   
-   Optimized for V2 & SSR-safe:
-   - Statically rendered, hidden on mobile via CSS (hidden md:block)
-   - Zero layout flashes or hydration jumps (isMobile state removed from root component)
-   - Particle canvas initialized client-side only on desktop screens
+   PRODUCT WORLDS — Scene 3: The Journey (8 living worlds)
+   Immersive Awwwards-level transitions, parallax and animations.
    ═══════════════════════════════════════════════════════════════ */
 
-interface WorldConfig {
-  id: number;
-  name: string;
-  tagline: string;
-  themeTitle: string;
-  description: string;
-  image: string;
-  bgGrad: string;
-  textColor: string;
-  particleColor: string;
-}
-
-const worldsData: WorldConfig[] = [
-  {
-    id: 1,
-    name: "BLUE MOJITO",
-    tagline: "KRİSTAL FERAHLIK",
-    themeTitle: "BUZ MAĞARASI",
-    description: "Derin buz mağaralarının serinliği, donmuş kristaller and saf dağ kaynaklarının berraklığı. Her yudumda kutup rüzgarlarının ferahlığını hisset.",
-    image: "/images/blue_mojito.webp",
-    bgGrad: "from-blue-100/60 via-sky-50/30 to-blue-200/40",
-    textColor: "text-brand-blue-text",
-    particleColor: "rgba(56,139,230,0.4)",
-  },
-  {
-    id: 2,
-    name: "BERRY BOOST",
-    tagline: "ENERJİ DOLU TUTKU",
-    themeTitle: "KİRAZ ORMANI",
-    description: "Pembe kiraz ağaçlarının altında bir yürüyüş. Düşen çiçek yaprakları and taze orman meyvelerinin tatlı patlaması.",
-    image: "/images/berry_boost.webp",
-    bgGrad: "from-pink-100/60 via-rose-50/30 to-pink-200/40",
-    textColor: "text-brand-pink-text",
-    particleColor: "rgba(224,79,117,0.5)",
-  },
-  {
-    id: 3,
-    name: "PASSION BREEZE",
-    tagline: "EGZOTİK KAÇAMAK",
-    themeTitle: "TROPİKAL ADA",
-    description: "Altın kumlu plajlarda gün doğumu, ılık deniz meltemi and sallanan palmiye yaprakları. Egzotik çarkıfelek meyvesinin tropik enerjisiyle tazelen.",
-    image: "/images/passion_breeze.webp",
-    bgGrad: "from-amber-100/60 via-orange-50/30 to-amber-200/40",
-    textColor: "text-brand-orange-text",
-    particleColor: "rgba(229,138,43,0.5)",
-  },
-  {
-    id: 4,
-    name: "LIME FRESH",
-    tagline: "SADE VE DOĞAL",
-    themeTitle: "YEŞİL VADİ",
-    description: "Akdeniz'in yemyeşil doğası and sabah çiyiyle yıkanmış limon bahçeleri. Taze nane yaprakları and organik lime özlerinin canlandırıcı dengesi.",
-    image: "/images/lime_fresh.webp",
-    bgGrad: "from-emerald-100/60 via-green-50/30 to-emerald-200/40",
-    textColor: "text-brand-green-text",
-    particleColor: "rgba(115,184,62,0.5)",
-  },
-];
-
-// World-specific particle canvas (Desktop client-side only)
-function WorldParticles({ worldId, color }: { worldId: number; color: string }) {
+// World-specific particle canvas (Desktop & Mobile optimized)
+function WorldParticles({ drinkId, color, isMobile }: { drinkId: string; color: string; isMobile: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
-    setIsDesktop(window.innerWidth >= 768);
-    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (!isDesktop) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -104,26 +34,28 @@ function WorldParticles({ worldId, color }: { worldId: number; color: string }) 
       rotSpeed: number;
     }[] = [];
 
-    const count = worldId === 1 ? 30 : worldId === 2 ? 25 : 20;
-    const fallDuration = worldId === 1 ? 8 : 12;
+    // Particle count: 24 on desktop, 12 on mobile (optimizes DOM and GPU footprint)
+    const count = isMobile ? 12 : 24;
 
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      if (canvas && canvas.parentElement) {
+        canvas.width = canvas.parentElement.clientWidth || window.innerWidth;
+        canvas.height = canvas.parentElement.clientHeight || window.innerHeight;
+      }
     };
-    window.addEventListener("resize", resize);
     resize();
+    window.addEventListener("resize", resize);
 
     for (let i = 0; i < count; i++) {
       particles.push({
         x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height - canvas.height,
-        r: Math.random() * 3 + 1.5,
-        speedY: Math.random() * (canvas.height / (fallDuration * 60)) + 0.3,
-        speedX: Math.random() * 0.8 - 0.4,
-        opacity: Math.random() * 0.5 + 0.2,
+        y: Math.random() * canvas.height,
+        r: Math.random() * (isMobile ? 3 : 5) + 3,
+        speedY: Math.random() * 1.2 + 0.4,
+        speedX: Math.random() * 0.4 - 0.2,
+        opacity: Math.random() * 0.45 + 0.15,
         rotation: Math.random() * 360,
-        rotSpeed: Math.random() * 2 - 1,
+        rotSpeed: Math.random() * 1.0 - 0.5,
       });
     }
 
@@ -132,11 +64,11 @@ function WorldParticles({ worldId, color }: { worldId: number; color: string }) 
 
       particles.forEach((p) => {
         p.y += p.speedY;
-        p.x += p.speedX + Math.sin(p.rotation * 0.02) * 0.3;
+        p.x += p.speedX + Math.sin(p.rotation * 0.008) * 0.15;
         p.rotation += p.rotSpeed;
 
-        if (p.y > canvas.height + 10) {
-          p.y = -10;
+        if (p.y > canvas.height + 20) {
+          p.y = -20;
           p.x = Math.random() * canvas.width;
         }
 
@@ -145,29 +77,69 @@ function WorldParticles({ worldId, color }: { worldId: number; color: string }) 
         ctx.rotate((p.rotation * Math.PI) / 180);
         ctx.globalAlpha = p.opacity;
 
-        if (worldId === 1) {
+        ctx.fillStyle = color;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+
+        // Custom GPU-friendly drawing paths matching the drink themes
+        if (drinkId === "cool-lime") {
+          // Cool Lime: green leaf
           ctx.beginPath();
-          ctx.moveTo(0, -p.r);
-          ctx.lineTo(p.r, 0);
-          ctx.lineTo(0, p.r);
-          ctx.lineTo(-p.r, 0);
+          ctx.ellipse(0, 0, p.r * 0.7, p.r * 1.6, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (drinkId === "limonata") {
+          // Limonata: yellow lemon peel squiggle
+          ctx.beginPath();
+          ctx.arc(0, 0, p.r, 0, Math.PI * 0.8, false);
+          ctx.stroke();
+        } else if (drinkId === "merida") {
+          // Merida: small orange crescent pieces
+          ctx.beginPath();
+          ctx.arc(0, 0, p.r * 1.1, 0, Math.PI, false);
+          ctx.arc(0, 0, p.r * 0.5, Math.PI, 0, true);
           ctx.closePath();
-          ctx.fillStyle = color;
           ctx.fill();
-        } else if (worldId === 2) {
+        } else if (drinkId === "redline") {
+          // Redline: small red hibiscus seeds
           ctx.beginPath();
-          ctx.ellipse(0, 0, p.r, p.r * 1.6, 0, 0, Math.PI * 2);
-          ctx.fillStyle = color;
+          ctx.moveTo(0, -p.r * 1.4);
+          ctx.quadraticCurveTo(p.r * 0.8, 0, 0, p.r);
+          ctx.quadraticCurveTo(-p.r * 0.8, 0, 0, -p.r * 1.4);
+          ctx.closePath();
           ctx.fill();
-        } else if (worldId === 3) {
+        } else if (drinkId === "sundrop") {
+          // Sundrop: golden sparkles (4-point star)
           ctx.beginPath();
-          ctx.arc(0, 0, p.r * 0.8, 0, Math.PI * 2);
-          ctx.fillStyle = color;
+          ctx.moveTo(0, -p.r * 1.3);
+          ctx.quadraticCurveTo(0, 0, p.r * 1.3, 0);
+          ctx.quadraticCurveTo(0, 0, 0, p.r * 1.3);
+          ctx.quadraticCurveTo(0, 0, -p.r * 1.3, 0);
+          ctx.quadraticCurveTo(0, 0, 0, -p.r * 1.3);
+          ctx.closePath();
+          ctx.fill();
+        } else if (drinkId === "sunset") {
+          // Sunset: peach light sparks
+          ctx.beginPath();
+          ctx.arc(0, 0, p.r * 0.9, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (drinkId === "churchill") {
+          // Churchill: soda bubbles
+          ctx.beginPath();
+          ctx.arc(0, 0, p.r * 1.2, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+          ctx.stroke();
+        } else if (drinkId === "portakal-suyu") {
+          // Portakal Suyu: orange droplets
+          ctx.beginPath();
+          ctx.moveTo(0, -p.r * 1.3);
+          ctx.bezierCurveTo(p.r, -p.r * 0.5, p.r, p.r, 0, p.r * 1.2);
+          ctx.bezierCurveTo(-p.r, p.r, -p.r, -p.r * 0.5, 0, -p.r * 1.3);
+          ctx.closePath();
           ctx.fill();
         } else {
+          // Fallback droplet
           ctx.beginPath();
-          ctx.ellipse(0, 0, p.r * 0.7, p.r * 2, 0, 0, Math.PI * 2);
-          ctx.fillStyle = color;
+          ctx.arc(0, 0, p.r * 0.7, 0, Math.PI * 2);
           ctx.fill();
         }
 
@@ -182,9 +154,7 @@ function WorldParticles({ worldId, color }: { worldId: number; color: string }) 
       window.removeEventListener("resize", resize);
       cancelAnimationFrame(animationId);
     };
-  }, [worldId, color, isDesktop]);
-
-  if (!isDesktop) return null;
+  }, [drinkId, color, isMobile]);
 
   return (
     <canvas
@@ -194,109 +164,250 @@ function WorldParticles({ worldId, color }: { worldId: number; color: string }) 
   );
 }
 
-function WorldSection({ world }: { world: WorldConfig }) {
+function WorldSection({ world }: { world: Drink }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const isMobile = useIsMobile();
+  const [isNearViewport, setIsNearViewport] = useState(false);
 
+  // Lazy loading IntersectionObserver
   useEffect(() => {
-    setIsDesktop(window.innerWidth >= 768);
-    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsNearViewport(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "350px" }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
   }, []);
 
+  // Track if this specific section is actively in view
+  const isInView = useInView(ref, { once: false, amount: isMobile ? 0.15 : 0.25 });
+
+  // 60FPS Mouse Parallax using MotionValues (bypasses React re-renders)
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const springX = useSpring(mouseX, { stiffness: 50, damping: 18 });
+  const springY = useSpring(mouseY, { stiffness: 50, damping: 18 });
+
+  const portalX = useTransform(springX, [-0.5, 0.5], isMobile ? [0, 0] : [-5, 5]);
+  const portalY = useTransform(springY, [-0.5, 0.5], isMobile ? [0, 0] : [-5, 5]);
+
+  const particlesX = useTransform(springX, [-0.5, 0.5], isMobile ? [0, 0] : [-2, 2]);
+  const particlesY = useTransform(springY, [-0.5, 0.5], isMobile ? [0, 0] : [-2, 2]);
+
+  useEffect(() => {
+    if (isMobile) return;
+
+    const handleWindowMouseMove = (e: MouseEvent) => {
+      const { clientX, clientY } = e;
+      const { innerWidth, innerHeight } = window;
+      mouseX.set((clientX / innerWidth) - 0.5);
+      mouseY.set((clientY / innerHeight) - 0.5);
+    };
+
+    window.addEventListener("mousemove", handleWindowMouseMove);
+    return () => window.removeEventListener("mousemove", handleWindowMouseMove);
+  }, [isMobile, mouseX, mouseY]);
+
+  // Scroll parallax for text elements
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start end", "end start"],
   });
-
-  const textY = useTransform(scrollYProgress, [0, 1], [60, -60]);
-  const imageScale = useTransform(scrollYProgress, [0, 0.5, 1], [0.95, 1.05, 0.95]);
-  const imageRotate = useTransform(scrollYProgress, [0, 1], [-5, 5]);
+  
+  const textY = useTransform(scrollYProgress, [0, 1], isMobile ? [10, -10] : [35, -35]);
   const worldOpacity = useTransform(scrollYProgress, [0.1, 0.25, 0.75, 0.9], [0, 1, 1, 0]);
 
+  // Split title into words for staggered entrance animation
+  const worldWords = world.worldName.split(" ");
+
+  // Entrance animations calculations
+  const portalScale = isInView ? 1 : 0.95;
+  const portalOpacity = isInView ? 1 : 0;
+  const portalBlur = isInView ? 0 : (isMobile ? 10 : 20);
+
+  const handleDiscoverClick = () => {
+    const el = document.getElementById("carousel-section");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
-    <div ref={ref} className="relative min-h-screen w-full overflow-hidden">
+    <div
+      ref={ref}
+      id={`world-section-${world.id}`}
+      className="relative min-h-screen w-full overflow-hidden"
+      style={{
+        contentVisibility: "auto",
+        containIntrinsicSize: "auto 800px",
+      }}
+    >
       <motion.div
-        style={{ opacity: worldOpacity }}
-        className={`min-h-screen w-full flex items-center justify-center relative py-32 px-6 md:px-12 bg-gradient-to-b ${world.bgGrad}`}
+        className="min-h-screen w-full flex items-center justify-center relative py-16 md:py-24 px-6 md:px-12 transition-all duration-[1000ms] ease-out"
+        style={{
+          opacity: worldOpacity,
+          backgroundColor: isInView ? (world.colors.background || "#ffffff") : "#ffffff",
+          backgroundImage: isInView 
+            ? `linear-gradient(to bottom, ${world.colors.background || "#ffffff"} 0%, ${world.colors.primary}0a 100%)`
+            : "linear-gradient(to bottom, #ffffff 0%, #ffffff 100%)",
+        }}
       >
-        {/* World-specific ambient effects */}
-        {isDesktop && world.id === 1 && (
-          <div className="absolute bottom-0 left-0 w-full h-[30%] blur-3xl pointer-events-none opacity-30 bg-gradient-to-t from-blue-200/50 to-transparent" />
-        )}
-        {isDesktop && world.id === 2 && (
-          <div className="absolute top-0 right-[20%] w-[40%] h-full pointer-events-none opacity-[0.08]" style={{ background: "linear-gradient(135deg, rgba(255,180,200,0.6) 0%, transparent 60%)" }} />
-        )}
-        {isDesktop && world.id === 3 && (
-          <div className="absolute top-0 right-0 w-[50%] h-[60vh] pointer-events-none opacity-20" style={{ background: "radial-gradient(ellipse at 90% 0%, rgba(255,200,80,0.6) 0%, transparent 55%)" }} />
-        )}
-        {isDesktop && world.id === 4 && (
-          <div className="absolute bottom-[10%] left-0 w-full h-24 blur-2xl pointer-events-none opacity-20 bg-gradient-to-t from-emerald-100/60 to-transparent" />
+        {/* Lazy load particles and heavy background visual details */}
+        {isNearViewport && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isInView ? 1 : 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            style={{ x: particlesX, y: particlesY }}
+            className="absolute inset-0 w-full h-full pointer-events-none z-[2]"
+          >
+            <div
+              className="absolute bottom-0 left-0 w-full h-[35%] blur-3xl pointer-events-none opacity-20"
+              style={{
+                background: `linear-gradient(to top, ${world.colors.primary}40, transparent)`,
+              }}
+            />
+            <WorldParticles
+              drinkId={world.id}
+              color={world.colors.primary}
+              isMobile={isMobile || false}
+            />
+          </motion.div>
         )}
 
-        {/* Particle canvas */}
-        <WorldParticles worldId={world.id} color={world.particleColor} />
-
-        {/* Content */}
-        <div className="max-w-[1280px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-16 items-center relative z-10">
-          {/* Left: World Text */}
+        {/* Content wrapper */}
+        <div className="max-w-[1280px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative z-10">
+          
+          {/* Left Side: Staggered Text Details */}
           <motion.div
             style={{ y: textY }}
-            className="lg:col-span-6 flex flex-col space-y-6 text-left items-start"
+            className="lg:col-span-6 flex flex-col space-y-5 text-left items-center lg:items-start text-center lg:text-left z-10 order-2 lg:order-1"
           >
-            <span className={`type-label ${world.textColor}`}>
+            {/* 1. Subtitle Tagline (1.0s delay) */}
+            <motion.span
+              initial={{ opacity: 0, y: 10 }}
+              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+              transition={{ duration: 0.5, delay: 1.0 }}
+              className="type-label px-4 py-1.5 rounded-full bg-white/50 border border-white/60 shadow-sm inline-block"
+              style={{ color: world.colors.primary }}
+            >
               {world.tagline}
-            </span>
+            </motion.span>
 
-            <h2 className="type-scene-title text-brand-navy font-sans">
-              {world.name}{" "}
-              <br />
-              <span className={world.textColor}>{world.themeTitle}</span>
+            {/* 2. World Title (Word-by-word stagger at 1.2s + Drink name slide-up at 1.35s) */}
+            <h2 className="type-scene-title text-brand-navy font-sans uppercase leading-tight">
+              <span className="block mb-1">
+                {worldWords.map((word, idx) => (
+                  <motion.span
+                    key={idx}
+                    initial={{ opacity: 0, x: -15 }}
+                    animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -15 }}
+                    transition={{ duration: 0.5, delay: 1.2 + idx * 0.12, ease: "easeOut" }}
+                    className="inline-block mr-2.5"
+                  >
+                    {word}
+                  </motion.span>
+                ))}
+              </span>
+              <motion.span
+                initial={{ opacity: 0, y: 15 }}
+                animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
+                transition={{ duration: 0.6, delay: 1.35, ease: "easeOut" }}
+                style={{ color: world.colors.primary }}
+                className="inline-block font-black"
+              >
+                {world.name}
+              </motion.span>
             </h2>
 
-            <p className="type-body text-brand-slate max-w-xl">
+            {/* 3. Description Paragraph (1.5s delay) */}
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+              transition={{ duration: 0.7, delay: 1.5, ease: "easeOut" }}
+              className="type-body text-brand-slate max-w-xl leading-relaxed font-semibold"
+            >
               {world.description}
-            </p>
+            </motion.p>
 
+            {/* 4. Discover Button (1.8s delay with infinite hover breathe) */}
             <div className="pt-2">
-              <Magnetic range={30} strength={0.3}>
-                <button className="type-button group flex items-center space-x-3 bg-white hover:bg-brand-navy text-brand-navy hover:text-white px-8 py-4 rounded-full border border-white/80 shadow-md transition-all duration-[var(--duration-hover)] cursor-pointer">
-                  <span>DÜNYAYI KEŞFET</span>
-                </button>
+              <Magnetic range={25} strength={0.35}>
+                <motion.button
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={isInView ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 100, damping: 10, delay: 1.8 }}
+                  whileHover={{ 
+                    y: -4, 
+                    scale: 1.05, 
+                    boxShadow: `0 12px 30px ${world.colors.primary}30` 
+                  }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={handleDiscoverClick}
+                  className="type-button group flex items-center space-x-3 bg-white hover:bg-brand-navy text-brand-navy hover:text-white px-8 py-4 rounded-full border border-white/80 shadow-md transition-all duration-[var(--duration-hover)] cursor-pointer"
+                  style={{
+                    boxShadow: `0 8px 24px ${world.colors.primary}15`,
+                  }}
+                >
+                  <span className="font-extrabold uppercase">DÜNYAYI KEŞFET</span>
+                </motion.button>
               </Magnetic>
             </div>
           </motion.div>
 
-          {/* Right: Glass Portal with drink */}
-          <div className="lg:col-span-6 flex justify-center items-center relative py-6">
+          {/* Right Side: Glass Portal (Breathing & entrance blur) */}
+          <div className="lg:col-span-6 flex justify-center items-center relative py-6 order-1 lg:order-2">
             <motion.div
-              style={{
-                scale: imageScale,
-                rotate: imageRotate,
-                transformStyle: "preserve-3d",
+              animate={{
+                scale: portalScale,
+                opacity: portalOpacity,
+                filter: `blur(${portalBlur}px)`,
               }}
-              className="relative w-[300px] h-[450px] md:w-[380px] md:h-[510px] rounded-t-full glass-portal overflow-hidden shadow-2xl bg-white/5"
+              transition={{
+                scale: { type: "spring", stiffness: 80, damping: 12, delay: 0.5 },
+                opacity: { duration: 0.6, delay: 0.5 },
+                filter: { duration: 0.6, delay: 0.5 },
+              }}
+              className="relative rounded-t-full shadow-2xl z-10 overflow-hidden"
+              style={{
+                x: portalX,
+                y: portalY,
+                transformStyle: "preserve-3d",
+                willChange: "transform, opacity",
+              }}
             >
-              <Image
-                src={world.image}
-                alt={world.name}
-                fill
-                className="object-cover animate-float-medium"
-                sizes="(max-width: 768px) 300px, 380px"
+              <ProductVisual
+                image={world.image}
+                name={world.name}
+                emoji={world.emoji}
+                colors={world.colors}
+                size="xl"
+                animatePortal={true}
+                isInView={isInView}
+                isMobile={isMobile || false}
+                className="glass-portal"
               />
 
-              <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-transparent pointer-events-none z-10" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none z-10" />
+              <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-transparent pointer-events-none z-10" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none z-10" />
             </motion.div>
           </div>
+
         </div>
       </motion.div>
     </div>
   );
 }
-
-import { useIsMobile } from "@/hooks/useIsMobile";
 
 export default function ProductWorlds() {
   const isMobile = useIsMobile();
@@ -306,8 +417,12 @@ export default function ProductWorlds() {
   }
 
   return (
-    <section id="worlds-section" className="relative w-full overflow-hidden scene">
-      {worldsData.map((world) => (
+    <section
+      id="worlds-section"
+      className="relative w-full overflow-hidden scene"
+      style={{ contentVisibility: "auto", containIntrinsicSize: "auto 2000px" }}
+    >
+      {PRODUCTS.map((world) => (
         <WorldSection key={world.id} world={world} />
       ))}
     </section>

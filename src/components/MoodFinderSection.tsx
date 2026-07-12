@@ -9,6 +9,8 @@ import Magnetic from "@/components/ui/Magnetic";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { computeMood, parseBirthDate, type MoodResult } from "@/lib/mood-algorithm";
 import { type MoqDrink } from "@/lib/drinks";
+import ProductVisual from "./ProductVisual";
+
 
 /* ═══════════════════════════════════════════════════════════════
    MOOD FINDER — Scene 6: "Modunu Bul" Premium Experience
@@ -34,6 +36,9 @@ const LOADING_MESSAGES = [
 const LOADING_INTERVAL = 1100; // ms per message
 
 export default function MoodFinderSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: true, amount: 0.2 });
+
   const [step, setStep] = useState<"intro" | "form" | "loading" | "result">("intro");
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
@@ -107,6 +112,7 @@ export default function MoodFinderSection() {
 
   return (
     <section
+      ref={sectionRef}
       id="mood-finder"
       className="relative min-h-screen w-full flex flex-col justify-center items-center py-32 px-6 md:px-12 overflow-hidden scene"
     >
@@ -228,7 +234,12 @@ export default function MoodFinderSection() {
       <div className="max-w-[1280px] w-full flex flex-col items-center space-y-12 relative z-10">
         {/* Header (Hidden in Result Step) */}
         {step !== "result" && (
-          <div className="flex flex-col items-center space-y-3 text-center">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col items-center space-y-3 text-center"
+          >
             <span className="type-label text-brand-orange-text">
               GERÇEK TAT, GERÇEK SEN.
             </span>
@@ -238,7 +249,7 @@ export default function MoodFinderSection() {
             <p className="type-body text-brand-slate max-w-xl">
               Belki enerjin Merida kadar canlıdır. Belki de Sunset kadar sakindir. Bunu öğrenmenin tek yolu var. İsmini bırak. Doğum tarihini ekle. Gerisini MOQ merak etsin.
             </p>
-          </div>
+          </motion.div>
         )}
 
         {/* Result Header (Visible only in Result Step) */}
@@ -289,14 +300,16 @@ export default function MoodFinderSection() {
                 style={{ borderColor: result.drink.color, animation: "rotate-reverse 15s linear infinite" }}
               />
               
-              {/* Inner glowing circle */}
-              <div 
-                className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-3xl md:text-4xl font-black bg-white shadow-2xl relative z-10"
-                style={{ 
-                  boxShadow: `0 0 45px ${result.drink.glowColor}, inset 0 0 15px rgba(255,255,255,1)`
-                }}
-              >
-                {result.drink.resultTheme.coreSymbol}
+              {/* Inner glowing circle - replaced with ProductVisual for image compatibility */}
+              <div className="relative z-10 w-24 h-24 flex items-center justify-center scale-95 md:scale-100">
+                <ProductVisual
+                  image={result.drink.image}
+                  name={result.drink.name}
+                  emoji={result.drink.emoji}
+                  colors={result.drink.colors}
+                  size="sm"
+                  className="rounded-full shadow-2xl border-2 border-white/60"
+                />
               </div>
             </div>
           </div>
@@ -304,7 +317,12 @@ export default function MoodFinderSection() {
 
         {/* Center Glass Portal (only for Form/Loading/Intro) */}
         {step !== "result" && (
-          <div className="w-full max-w-lg glass border border-white/95 rounded-[2.5rem] p-8 md:p-12 shadow-[0_30px_70px_rgba(229,138,43,0.06)] relative overflow-hidden flex flex-col items-center min-h-[460px]">
+          <motion.div 
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 30, scale: 0.95 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-lg glass border border-white/95 rounded-[2.5rem] p-8 md:p-12 shadow-[0_30px_70px_rgba(229,138,43,0.06)] relative overflow-hidden flex flex-col items-center min-h-[460px]"
+          >
             <AnimatePresence mode="wait">
               {step === "intro" && (
                 <motion.div
@@ -441,7 +459,7 @@ export default function MoodFinderSection() {
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+          </motion.div>
         )}
 
         {/* Result Screen (staggered stack outside the main card wrapper, matching the mockup layout) */}

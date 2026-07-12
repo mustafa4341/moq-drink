@@ -98,12 +98,14 @@ export default function Home() {
           {/* 11-Layer Living Background (always present) */}
           <WorldBackground />
 
-          {/* Mobile Bottom Sheet Overlay (dynamic, client-side only) */}
-          <BottomSheet
-            drink={selectedDrink}
-            isOpen={isBottomSheetOpen}
-            onClose={() => setIsBottomSheetOpen(false)}
-          />
+          {/* Mobile Bottom Sheet Overlay (dynamic, client-side only) - Lazy loaded (mounted only on open) */}
+          {isBottomSheetOpen && (
+            <BottomSheet
+              drink={selectedDrink}
+              isOpen={isBottomSheetOpen}
+              onClose={() => setIsBottomSheetOpen(false)}
+            />
+          )}
 
           {/* Optional Ambient Sound Toggle */}
           <AmbientSound />

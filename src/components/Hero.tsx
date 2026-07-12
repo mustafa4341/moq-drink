@@ -104,13 +104,16 @@ export default function Hero() {
       style={isMobile ? { height: fixedHeight } : { height: "95dvh" }}
     >
       {/* ── 100% Visual Match Background Image with Mouse Parallax ── */}
-      {/* PERF-3: Parallax transform only applied on desktop */}
+      {/* PERF-3: Parallax + scale applied on desktop only.
+          On mobile there is no parallax, so the 1.04 scale (which exists only to cover
+          the edges revealed by parallax movement) has no purpose and instead causes a
+          perceived "growing" jitter during scroll repaints on iOS Safari. */}
       <motion.div
         style={isMobile === false ? {
           x: bgTranslateX,
           y: bgTranslateY,
           scale: 1.04, // slightly scaled up to support parallax edges without clipping
-        } : { scale: 1.04 }}
+        } : undefined}
         className="absolute inset-0 z-0 select-none pointer-events-none"
       >
         <Image
