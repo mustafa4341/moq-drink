@@ -65,6 +65,7 @@ export default function Footer() {
             href="https://www.instagram.com/moqdrink/"
             target="_blank"
             rel="noopener noreferrer"
+            data-cursor="FOLLOW"
             className="flex items-center justify-center space-x-2 py-3 px-6 min-h-[44px]"
           >
             <Instagram className="w-4 h-4" />
@@ -81,7 +82,7 @@ export default function Footer() {
         </div>
 
         {/* Mockup Vector QR Code */}
-        <div className="flex flex-col items-center space-y-2 bg-white/10 backdrop-blur-md p-4 rounded-3xl border border-white/20">
+        <div data-cursor="SCAN" className="flex flex-col items-center space-y-2 bg-white/10 backdrop-blur-md p-4 rounded-3xl border border-white/20">
           <div className="w-24 h-24 bg-white p-2 rounded-xl flex items-center justify-center">
             <div className="grid grid-cols-5 gap-1.5 w-full h-full">
               <div className="bg-brand-navy rounded-sm" />
@@ -219,6 +220,7 @@ export default function Footer() {
               href="https://www.instagram.com/moqdrink/"
               target="_blank"
               rel="noopener noreferrer"
+              data-cursor="FOLLOW"
               className="hover:text-white flex items-center space-x-2 transition-colors duration-300"
             >
               <Instagram className="w-4 h-4" />
@@ -226,16 +228,6 @@ export default function Footer() {
             </a>
           </Magnetic>
 
-          <Magnetic range={25} strength={0.3}>
-            <a
-              href="https://tiktok.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-white flex items-center space-x-2 transition-colors duration-300"
-            >
-              <span>TIKTOK</span>
-            </a>
-          </Magnetic>
 
           <Magnetic range={25} strength={0.3}>
             <a
@@ -260,7 +252,7 @@ export default function Footer() {
 
           <Magnetic range={25} strength={0.3}>
             <a
-              href="#"
+              href="/gizlilik"
               className="hover:text-white flex items-center space-x-2 transition-colors duration-300"
             >
               <Shield className="w-4 h-4" />

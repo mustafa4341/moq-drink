@@ -734,5 +734,34 @@ html.lenis, html.lenis body {
   }
 }
 
+/* Custom Scrollbar for dynamic memory board */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(94, 111, 136, 0.15); /* brand-slate with transparency */
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 139, 230, 0.35); /* brand-blue-text with transparency */
+}
+
+/* Custom Cursor support to hide native cursor on desktop hoverable elements */
+@media (min-width: 768px) {
+  body.custom-cursor-active,
+  body.custom-cursor-active * {
+    cursor: none !important;
+  }
+}
+
+/* GPU Layer Acceleration Utility */
+.gpu-layer {
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+}
+
 
 

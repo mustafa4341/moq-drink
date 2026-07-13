@@ -9,20 +9,24 @@ import AmbientSound from "@/components/AmbientSound";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import TransitionText from "@/components/TransitionText";
-import InfiniteCarousel from "@/components/InfiniteCarousel";
-import ProductWorlds from "@/components/ProductWorlds";
-import Story from "@/components/Story";
-import Vision from "@/components/Vision";
-import MoodFinderSection from "@/components/MoodFinderSection";
-import Philosophy from "@/components/Philosophy";
-import InstagramFeed from "@/components/InstagramFeed";
+import TasteJourney from "@/components/TasteJourney";
 import Footer from "@/components/Footer";
+import CustomCursor from "@/components/CustomCursor";
+import BeachPulseWidget from "@/components/BeachPulseWidget";
+import { useLenis } from "lenis/react";
 
 // Centralized product data
 import { PRODUCTS, type Drink } from "@/lib/product-data";
 
-// Dynamically import BottomSheet to optimize mobile bundle sizes (ARCH-3)
+// Dynamically import components to optimize initial mobile loading (lazy chunks)
 const BottomSheet = dynamic(() => import("@/components/BottomSheet"), { ssr: false });
+const ProductWorlds = dynamic(() => import("@/components/ProductWorlds"), { ssr: false });
+const Story = dynamic(() => import("@/components/Story"), { ssr: false });
+const Vision = dynamic(() => import("@/components/Vision"), { ssr: false });
+const MoodFinderSection = dynamic(() => import("@/components/MoodFinderSection"), { ssr: false });
+const Philosophy = dynamic(() => import("@/components/Philosophy"), { ssr: false });
+const InstagramFeed = dynamic(() => import("@/components/InstagramFeed"), { ssr: false });
+const CommunitySection = dynamic(() => import("@/components/community/CommunitySection"), { ssr: false });
 
 /* ═══════════════════════════════════════════════════════════════
    MOQ DRINK — Page Assembly
@@ -36,7 +40,7 @@ const BottomSheet = dynamic(() => import("@/components/BottomSheet"), { ssr: fal
      ├─ Navbar (fixed, transparent)
      ├─ Hero (Scene 1)
      ├─ TransitionText: "Every flavor has its own world."
-     ├─ InfiniteCarousel (Scene 2)
+     ├─ TasteJourney (Scene 2 — Taste Journey)
      ├─ TransitionText: "Enter the worlds."
      ├─ ProductWorlds (Scene 3 — 4 worlds)
      ├─ TransitionText: "How it all began..."
@@ -47,6 +51,8 @@ const BottomSheet = dynamic(() => import("@/components/BottomSheet"), { ssr: fal
      ├─ Philosophy (Scene 7)
      ├─ TransitionText: "Join the world."
      ├─ InstagramFeed (Scene 8)
+     ├─ TransitionText: "Bir sahil... / Bir içecek... / Bir anı..."
+     ├─ CommunitySection (Scene 8b — Sahilin Nabzı)
      └─ Footer (Scene 9 — cinematic sunset)
    ═══════════════════════════════════════════════════════════════ */
 
@@ -55,12 +61,18 @@ export default function Home() {
   const [showLoading, setShowLoading] = useState(true);
   const [selectedDrink, setSelectedDrink] = useState<Drink | null>(null);
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+  const [activeWorldId, setActiveWorldId] = useState<string>("cool-lime");
+  const [isWorldActive, setIsWorldActive] = useState<boolean>(false);
+  const lenis = useLenis();
 
   const handleEntranceComplete = useCallback(() => {
     setIsEntered(true);
     // Garbage collect and unmount CinematicLoading after fade-out transition finishes
     setTimeout(() => {
       setShowLoading(false);
+      import("gsap/ScrollTrigger").then(({ ScrollTrigger }) => {
+        ScrollTrigger.refresh();
+      });
     }, 1000);
   }, []);
 
@@ -71,7 +83,12 @@ export default function Home() {
     if (isEntered) return;
     const t = setTimeout(() => {
       setIsEntered(true);
-      setTimeout(() => setShowLoading(false), 1000);
+      setTimeout(() => {
+        setShowLoading(false);
+        import("gsap/ScrollTrigger").then(({ ScrollTrigger }) => {
+          ScrollTrigger.refresh();
+        });
+      }, 1000);
     }, 4500);
     return () => clearTimeout(t);
   }, [isEntered]);
@@ -87,6 +104,42 @@ export default function Home() {
       setIsBottomSheetOpen(true);
     }
   }, []);
+
+  const handleDiscover = useCallback((id: string) => {
+    setActiveWorldId(id);
+    setIsWorldActive(true);
+
+    const el = document.getElementById("worlds-section");
+    const appWrapper = document.querySelector("main") as HTMLElement | null;
+
+    if (appWrapper) {
+      // 1. Apply blur + scale shrink immediately
+      appWrapper.style.transition = "transform 400ms cubic-bezier(0.16, 1, 0.3, 1), filter 400ms ease";
+      appWrapper.style.transform = "scale(0.96) translateY(-12px)";
+      appWrapper.style.filter = "blur(4px)";
+
+      // 2. Start smooth scroll to worlds-section simultaneously (1.0s)
+      if (el) {
+        if (lenis) {
+          lenis.scrollTo(el, {
+            offset: 0,
+            duration: 1.0,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          });
+        } else {
+          el.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+
+      // 3. Clear the blur BEFORE scroll ends (at 650ms) — use instant clear (no animation)
+      //    so user arrives at worlds-section fully unblurred.
+      setTimeout(() => {
+        appWrapper.style.transition = "none";
+        appWrapper.style.transform = "scale(1) translateY(0)";
+        appWrapper.style.filter = "none";
+      }, 650);
+    }
+  }, [lenis]);
 
   return (
     <div className="relative min-h-screen text-brand-navy selection:bg-brand-blue-bg selection:text-brand-blue-text">
@@ -110,6 +163,9 @@ export default function Home() {
           {/* Optional Ambient Sound Toggle */}
           <AmbientSound />
 
+          {/* Custom Interactive Desktop Cursor */}
+          <CustomCursor activeWorldId={activeWorldId} isWorldActive={isWorldActive} />
+
           {/* Smooth Scroll Momentum Wrapper */}
           <SmoothScroll>
             {/* Transparent Editorial Navbar */}
@@ -121,14 +177,25 @@ export default function Home() {
               {/* Scene 1: Hero — The Arrival */}
               <Hero />
 
+              {/* Mobile Beach Pulse Widget (positioned below Hero) */}
+              <div className="w-full lg:hidden flex justify-center py-8 px-6 bg-transparent relative z-20">
+                <BeachPulseWidget />
+              </div>
+
               {/* Transition: Hero → Carousel */}
               <TransitionText
                 lines={["Her lezzetin", "kendine ait", "bir dünyası var."]}
                 align="center"
               />
 
-              {/* Scene 2: Flavor Collection — The Gallery */}
-              <InfiniteCarousel onDrinkClick={handleDrinkClick} />
+              {/* Scene 2: Taste Journey — Pinned Horizontal Showcase */}
+              <TasteJourney 
+                onDrinkClick={handleDrinkClick} 
+                onDiscover={handleDiscover}
+                activeWorldId={activeWorldId}
+                isWorldActive={isWorldActive}
+                onWorldActiveChange={setIsWorldActive}
+              />
 
 
               {/* Transition: Carousel → Drink Worlds */}
@@ -137,8 +204,8 @@ export default function Home() {
                 align="center"
               />
 
-              {/* Scene 3: Drink Worlds — The Journey (4 living worlds) */}
-              <ProductWorlds />
+              {/* Scene 3: Drink Worlds — The Journey (dynamic living world) */}
+              <ProductWorlds activeWorldId={activeWorldId} />
 
               {/* Transition: Drink Worlds → Story */}
               <TransitionText
@@ -177,6 +244,15 @@ export default function Home() {
 
               {/* Scene 8: Instagram — The Community */}
               <InstagramFeed />
+
+              {/* Transition: Instagram → Sahilin Nabzı */}
+              <TransitionText
+                lines={["Bir sahil...", "Bir içecek...", "Bir anı..."]}
+                align="center"
+              />
+
+              {/* Scene 8b: Sahilin Nabzı — The Living Wall (community memories) */}
+              <CommunitySection />
 
             </main>
 

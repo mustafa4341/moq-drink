@@ -311,37 +311,7 @@ export default function BottomSheet({ drink, isOpen, onClose }: BottomSheetProps
                 ))}
               </motion.div>
 
-              {/* ── 9. MOQ Message (Comes Last) ── */}
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.65, duration: 0.45 }}
-                className="p-4 rounded-2xl border border-dashed text-center relative overflow-hidden bg-white/40 z-[2]"
-                style={{ borderColor: `${drink.colors.primary}30` }}
-              >
-                <span className="text-[9px] font-black opacity-45 uppercase tracking-widest block mb-1">
-                  BUGÜNKÜ MOQ MESAJI
-                </span>
-                <p className="text-xs font-black text-brand-navy italic max-w-xs mx-auto">
-                  "{drink.moodMessage}"
-                </p>
-              </motion.div>
-
-              {/* ── 10. CTA Breathing Button ── */}
-              <motion.button
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.75, duration: 0.4 }}
-                className="w-full py-4 rounded-full text-white font-black text-[11px] tracking-widest uppercase shadow-md transition-shadow relative overflow-hidden active:scale-98 z-[2]"
-                style={{
-                  backgroundColor: drink.colors.primary,
-                  boxShadow: `0 4px 18px ${drink.colors.primary}33`,
-                  animation: reducedMotion ? "none" : "cta-breathing 2.5s ease-in-out infinite",
-                }}
-              >
-                Bugün Bunu Dene
-              </motion.button>
-
+              {/* MOQ Message and CTA button removed for cleaner mobile layout */}
             </div>
 
             {/* Injected animations */}
@@ -369,18 +339,6 @@ export default function BottomSheet({ drink, isOpen, onClose }: BottomSheetProps
    ═══════════════════════════════════════════════════════════════ */
 
 function BottomSheetDecorations({ drink }: { drink: Drink }) {
-  const count = Math.min(drink.ingredients.length + 3, MAX_PARTICLES);
-  const particleSymbols: Record<string, string[]> = {
-    leaf: ["🍃", "🌿"],
-    snow: ["❄️", "🧊"],
-    spark: ["✨", "⚡"],
-    flower: ["🌸", "🌺"],
-    bubble: ["🫧"],
-    citrus: ["🍋", "🍊"],
-  };
-
-  const symbols = particleSymbols[drink.theme.particle] || ["✨"];
-
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
       
@@ -400,35 +358,8 @@ function BottomSheetDecorations({ drink }: { drink: Drink }) {
       {drink.theme.bgEffects.includes("sunset-cove") && (
         <div className="absolute top-0 left-0 w-full h-[30%] bg-gradient-to-b from-[#FF6B35]/15 to-transparent opacity-80" />
       )}
-      {drink.theme.bgEffects.includes("fizzy-bubbles") && (
-        <div className="absolute bottom-0 left-0 w-full h-[60%] bg-gradient-to-t from-slate-100/20 to-transparent" />
-      )}
-
-      {/* 2. Floating elements/particles emitter */}
-      {Array.from({ length: count }).map((_, i) => {
-        const left = (i * 37 + 12) % 90;
-        const delay = (i * 0.9) % 5.5;
-        const duration = 9 + (i % 4) * 3;
-        const size = 12 + (i % 3) * 6;
-        const symbol = symbols[i % symbols.length];
-
-        return (
-          <div
-            key={i}
-            className="absolute opacity-35"
-            style={{
-              fontSize: `${size}px`,
-              left: `${left}%`,
-              top: "-8%",
-              animation: `sheet-particle-fall ${duration}s linear infinite`,
-              animationDelay: `${delay}s`,
-              willChange: "transform",
-            }}
-          >
-            {symbol}
-          </div>
-        );
-      })}
+            {/* 2. Vector Canvas Particles instead of falling emojis */}
+      <BottomSheetParticles key={drink.id} drinkId={drink.id} color={drink.colors.primary} />
 
       {/* 3. Aesthetic overlays (e.g. glass reflections, vignette overlays) */}
       {drink.theme.bgEffects.includes("glass-reflection") && (
@@ -438,5 +369,148 @@ function BottomSheetDecorations({ drink }: { drink: Drink }) {
         <div className="absolute inset-0 shadow-[inset_0_0_60px_rgba(26,37,60,0.06)] pointer-events-none" />
       )}
     </div>
+  );
+}
+
+function BottomSheetParticles({ drinkId, color }: { drinkId: string; color: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animationId: number;
+    const particles: {
+      x: number;
+      y: number;
+      r: number;
+      speedY: number;
+      speedX: number;
+      opacity: number;
+      rotation: number;
+      rotSpeed: number;
+    }[] = [];
+
+    // 10 particles for mobile bottom sheet (lightweight and GPU friendly)
+    const count = 10;
+
+    const resize = () => {
+      if (canvas && canvas.parentElement) {
+        canvas.width = canvas.parentElement.clientWidth || window.innerWidth;
+        canvas.height = canvas.parentElement.clientHeight || window.innerHeight;
+      }
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 3 + 3,
+        speedY: Math.random() * 0.7 + 0.3,
+        speedX: Math.random() * 0.4 - 0.2,
+        opacity: Math.random() * 0.35 + 0.15,
+        rotation: Math.random() * 360,
+        rotSpeed: Math.random() * 0.8 - 0.4,
+      });
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach((p) => {
+        p.y += p.speedY;
+        p.x += p.speedX + Math.sin(p.rotation * 0.008) * 0.15;
+        p.rotation += p.rotSpeed;
+
+        if (p.y > canvas.height + 20) {
+          p.y = -20;
+          p.x = Math.random() * canvas.width;
+        }
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.globalAlpha = p.opacity;
+
+        ctx.fillStyle = color;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.2;
+
+        // Custom drawing paths matching the drink themes
+        if (drinkId === "cool-lime") {
+          ctx.beginPath();
+          ctx.ellipse(0, 0, p.r * 0.7, p.r * 1.6, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (drinkId === "limonata") {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.r, 0, Math.PI * 0.8, false);
+          ctx.stroke();
+        } else if (drinkId === "merida") {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.r * 1.1, 0, Math.PI, false);
+          ctx.arc(0, 0, p.r * 0.5, Math.PI, 0, true);
+          ctx.closePath();
+          ctx.fill();
+        } else if (drinkId === "redline") {
+          ctx.beginPath();
+          ctx.moveTo(0, -p.r * 1.4);
+          ctx.quadraticCurveTo(p.r * 0.8, 0, 0, p.r);
+          ctx.quadraticCurveTo(-p.r * 0.8, 0, 0, -p.r * 1.4);
+          ctx.closePath();
+          ctx.fill();
+        } else if (drinkId === "sundrop") {
+          ctx.beginPath();
+          ctx.moveTo(0, -p.r * 1.3);
+          ctx.quadraticCurveTo(0, 0, p.r * 1.3, 0);
+          ctx.quadraticCurveTo(0, 0, 0, p.r * 1.3);
+          ctx.quadraticCurveTo(0, 0, -p.r * 1.3, 0);
+          ctx.quadraticCurveTo(0, 0, 0, -p.r * 1.3);
+          ctx.closePath();
+          ctx.fill();
+        } else if (drinkId === "sunset") {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.r * 0.9, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (drinkId === "churchill") {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.r * 1.2, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+          ctx.stroke();
+        } else if (drinkId === "portakal-suyu") {
+          ctx.beginPath();
+          ctx.moveTo(0, -p.r * 1.3);
+          ctx.bezierCurveTo(p.r, -p.r * 0.5, p.r, p.r, 0, p.r * 1.2);
+          ctx.bezierCurveTo(-p.r, p.r, -p.r, -p.r * 0.5, 0, -p.r * 1.3);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.r * 0.7, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      });
+
+      animationId = requestAnimationFrame(animate);
+    };
+
+    // Start rendering loop immediately on mount
+    animate();
+    return () => {
+      window.removeEventListener("resize", resize);
+      cancelAnimationFrame(animationId);
+    };
+  }, [drinkId, color]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none z-[1] gpu-layer"
+    />
   );
 }

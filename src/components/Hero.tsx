@@ -5,6 +5,7 @@ import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Magnetic from "@/components/ui/Magnetic";
+import BeachPulseWidget from "@/components/BeachPulseWidget";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -32,6 +33,8 @@ export default function Hero() {
   const scrollHintRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const [fixedHeight, setFixedHeight] = useState<number | string>("95dvh");
+
+
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -93,6 +96,10 @@ export default function Hero() {
 
   const handleExploreClick = () => {
     document.getElementById("worlds-section")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleScrollToPulse = () => {
+    document.getElementById("sahilin-nabzi")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -189,8 +196,10 @@ export default function Hero() {
           </motion.div>
         </div>
 
-        {/* ── Right Column: Empty spacer letting background's portal show ── */}
-        <div className="lg:col-span-6 hidden lg:block" />
+        {/* ── Right Column: Beach Pulse Widget (Desktop only) ─────── */}
+        <div className="lg:col-span-6 hidden lg:flex justify-center lg:justify-end items-center relative z-30">
+          <BeachPulseWidget />
+        </div>
       </div>
 
       {/* ── Scroll Hint ─────────────────────────────────────── */}

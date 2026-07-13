@@ -6,6 +6,7 @@ import Magnetic from "@/components/ui/Magnetic";
 import { PRODUCTS, type Drink } from "@/lib/product-data";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import ProductVisual from "./ProductVisual";
+import { useLenis } from "lenis/react";
 
 /* ═══════════════════════════════════════════════════════════════
    PRODUCT WORLDS — Scene 3: The Journey (8 living worlds)
@@ -59,7 +60,10 @@ function WorldParticles({ drinkId, color, isMobile }: { drinkId: string; color: 
       });
     }
 
+    let isVisible = false;
+
     const animate = () => {
+      if (!isVisible) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       particles.forEach((p) => {
@@ -148,10 +152,23 @@ function WorldParticles({ drinkId, color, isMobile }: { drinkId: string; color: 
 
       animationId = requestAnimationFrame(animate);
     };
-    animate();
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+        if (isVisible) {
+          animationId = requestAnimationFrame(animate);
+        } else {
+          cancelAnimationFrame(animationId);
+        }
+      },
+      { threshold: 0 }
+    );
+    observer.observe(canvas);
 
     return () => {
       window.removeEventListener("resize", resize);
+      observer.disconnect();
       cancelAnimationFrame(animationId);
     };
   }, [drinkId, color, isMobile]);
@@ -167,6 +184,7 @@ function WorldParticles({ drinkId, color, isMobile }: { drinkId: string; color: 
 function WorldSection({ world }: { world: Drink }) {
   const ref = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const lenis = useLenis();
   const [isNearViewport, setIsNearViewport] = useState(false);
 
   // Lazy loading IntersectionObserver
@@ -189,7 +207,7 @@ function WorldSection({ world }: { world: Drink }) {
   }, []);
 
   // Track if this specific section is actively in view
-  const isInView = useInView(ref, { once: false, amount: isMobile ? 0.15 : 0.25 });
+  const isInView = useInView(ref, { once: false, amount: 0.02 });
 
   // 60FPS Mouse Parallax using MotionValues (bypasses React re-renders)
   const mouseX = useMotionValue(0);
@@ -245,7 +263,7 @@ function WorldSection({ world }: { world: Drink }) {
   return (
     <div
       ref={ref}
-      id={`world-section-${world.id}`}
+      id={`world-${world.id}`}
       className="relative min-h-screen w-full overflow-hidden"
       style={{
         contentVisibility: "auto",
@@ -340,29 +358,7 @@ function WorldSection({ world }: { world: Drink }) {
               {world.description}
             </motion.p>
 
-            {/* 4. Discover Button (1.8s delay with infinite hover breathe) */}
-            <div className="pt-2">
-              <Magnetic range={25} strength={0.35}>
-                <motion.button
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={isInView ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
-                  transition={{ type: "spring", stiffness: 100, damping: 10, delay: 1.8 }}
-                  whileHover={{ 
-                    y: -4, 
-                    scale: 1.05, 
-                    boxShadow: `0 12px 30px ${world.colors.primary}30` 
-                  }}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={handleDiscoverClick}
-                  className="type-button group flex items-center space-x-3 bg-white hover:bg-brand-navy text-brand-navy hover:text-white px-8 py-4 rounded-full border border-white/80 shadow-md transition-all duration-[var(--duration-hover)] cursor-pointer"
-                  style={{
-                    boxShadow: `0 8px 24px ${world.colors.primary}15`,
-                  }}
-                >
-                  <span className="font-extrabold uppercase">DÜNYAYI KEŞFET</span>
-                </motion.button>
-              </Magnetic>
-            </div>
+
           </motion.div>
 
           {/* Right Side: Glass Portal (Breathing & entrance blur) */}
@@ -409,22 +405,22 @@ function WorldSection({ world }: { world: Drink }) {
   );
 }
 
-export default function ProductWorlds() {
+export default function ProductWorlds({ activeWorldId = "cool-lime" }: { activeWorldId?: string }) {
   const isMobile = useIsMobile();
 
   if (isMobile) {
     return null;
   }
 
+  const activeWorld = PRODUCTS.find((d) => d.id === activeWorldId) || PRODUCTS[0];
+
   return (
     <section
       id="worlds-section"
-      className="relative w-full overflow-hidden scene"
-      style={{ contentVisibility: "auto", containIntrinsicSize: "auto 2000px" }}
+      className="relative w-full overflow-hidden scene min-h-screen"
+      style={{ contentVisibility: "auto", containIntrinsicSize: "auto 800px" }}
     >
-      {PRODUCTS.map((world) => (
-        <WorldSection key={world.id} world={world} />
-      ))}
+      <WorldSection key={activeWorld.id} world={activeWorld} />
     </section>
   );
 }
