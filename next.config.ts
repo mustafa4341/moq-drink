@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
     // Set the root to the current project directory using absolute path
     root: path.resolve("."),
   },
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;
