@@ -39,7 +39,7 @@ export function validateUsername(username: string): string | null {
   if (u.length > VALIDATION.username.maxLength)
     return `Kullanıcı adı en fazla ${VALIDATION.username.maxLength} karakter olmalı.`;
   if (!VALIDATION.username.pattern.test(u))
-    return "Sadece harf, rakam ve alt çizgi kullanabilirsin.";
+    return "Sadece harf, rakam, boşluk ve alt çizgi kullanabilirsin.";
   return null;
 }
 
@@ -204,6 +204,7 @@ class SupabaseCommunityRepository implements CommunityRepository {
     const { data, error } = await sb
       .from("beach_posts")
       .select("id, username, text, beach, created_at")
+      .eq("status", "visible")
       .order("created_at", { ascending: false })
       .limit(limit);
     if (error) throw error;
@@ -243,21 +244,49 @@ class SupabaseCommunityRepository implements CommunityRepository {
     // Subscribe asynchronously once the lazy client resolves.
     (async () => {
       const sb = await getSupabase();
+      // If cleanup was called before we resolved, bail immediately.
       if (!sb || !active) return;
+
+      const channelName = `beach_posts_inserts_${Date.now()}_${Math.random()}`;
       const sub = sb
-        .channel("beach_posts_inserts")
+        .channel(channelName)
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "beach_posts" },
-          (payload) => onInsert(payload.new as BeachPost)
+          (payload) => {
+            if (!active) return;
+            const newPost = payload.new as BeachPost & { status?: string };
+            if (!newPost.status || newPost.status === "visible") {
+              onInsert(newPost);
+            }
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "beach_posts" },
+          (payload) => {
+            if (!active) return;
+            if (typeof window !== "undefined") {
+              const event = new CustomEvent("moq_post_updated", { detail: payload.new });
+              window.dispatchEvent(event);
+            }
+          }
         )
         .subscribe();
+
       channel = sub;
+
+      // If cleanup was already called while we were awaiting, unsubscribe immediately.
+      if (!active) {
+        channel.unsubscribe();
+        channel = null;
+      }
     })();
 
     return () => {
       active = false;
       channel?.unsubscribe();
+      channel = null;
     };
   }
 }
