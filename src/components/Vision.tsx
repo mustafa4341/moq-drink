@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -9,7 +9,7 @@ import { motion, useScroll, useTransform, type MotionValue } from "framer-motion
    "WE DON'T MAKE DRINKS. WE CREATE MOODS."
    
    - Scroll-triggered sequential reveal (each line appears one by one)
-   - Subtle float animation on text block
+   - Subtle float animation on text block (desktop only — saves CPU on mobile)
    - Clean white background (contrast / palette cleanser)
    
    Each line is its own component so hooks stay at top level.
@@ -28,8 +28,8 @@ const visionLines: VisionLine[] = [
   { text: "YARATIYORUZ.", highlight: true },
 ];
 
-// Single line — hooks at top level (valid)
-function VisionTextLine({
+// Desktop: scroll-bound sequential reveal via useTransform
+function VisionTextLineDesktop({
   line,
   index,
   scrollYProgress,
@@ -63,8 +63,36 @@ function VisionTextLine({
   );
 }
 
+// Mobile: simple inView fade reveal — no useTransform hooks, no continuous computation
+function VisionTextLineMobile({
+  line,
+  index,
+}: {
+  line: VisionLine;
+  index: number;
+}) {
+  return (
+    <motion.span
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: false, amount: 0.3 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className={`text-5xl md:text-8xl lg:text-9xl font-black text-brand-navy leading-[0.85] tracking-tighter uppercase font-sans ${
+        line.highlight ? "text-brand-blue-text" : ""
+      }`}
+    >
+      {line.text}
+    </motion.span>
+  );
+}
+
 export default function Vision() {
   const ref = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -88,27 +116,39 @@ export default function Vision() {
         }}
       />
 
-      {/* Text block with float animation */}
+      {/* Text block — float animation disabled on mobile to save CPU */}
       <motion.div
-        animate={{
-          y: [0, -12, 12, 0],
-          rotate: [0, 0.5, -0.5, 0],
-        }}
-        transition={{
-          duration: 7,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
+        animate={
+          isMobile
+            ? undefined
+            : {
+                y: [0, -12, 12, 0],
+                rotate: [0, 0.5, -0.5, 0],
+              }
+        }
+        transition={
+          isMobile
+            ? undefined
+            : {
+                duration: 7,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }
+        }
         className="relative z-10 flex flex-col items-center justify-center text-center max-w-4xl px-6"
       >
-        {visionLines.map((line, index) => (
-          <VisionTextLine
-            key={index}
-            line={line}
-            index={index}
-            scrollYProgress={scrollYProgress}
-          />
-        ))}
+        {visionLines.map((line, index) =>
+          isMobile ? (
+            <VisionTextLineMobile key={index} line={line} index={index} />
+          ) : (
+            <VisionTextLineDesktop
+              key={index}
+              line={line}
+              index={index}
+              scrollYProgress={scrollYProgress}
+            />
+          )
+        )}
       </motion.div>
     </section>
   );

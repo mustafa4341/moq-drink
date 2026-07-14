@@ -5,21 +5,17 @@ import dynamic from "next/dynamic";
 import SmoothScroll from "@/components/SmoothScroll";
 import CinematicLoading from "@/components/CinematicLoading";
 import WorldBackground from "@/components/WorldBackground";
-import AmbientSound from "@/components/AmbientSound";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import TransitionText from "@/components/TransitionText";
 import TasteJourney from "@/components/TasteJourney";
-import Footer from "@/components/Footer";
-import CommunitySection from "@/components/community/CommunitySection";
-import CustomCursor from "@/components/CustomCursor";
-import BeachPulseWidget from "@/components/BeachPulseWidget";
 import { useLenis } from "lenis/react";
+
 
 // Centralized product data
 import { PRODUCTS, type Drink } from "@/lib/product-data";
 
-// Dynamically import components to optimize initial mobile loading (lazy chunks)
+// Dynamically import below-fold / conditionally-rendered components (lazy chunks)
 const BottomSheet = dynamic(() => import("@/components/BottomSheet"), { ssr: false });
 const ProductWorlds = dynamic(() => import("@/components/ProductWorlds"), { ssr: false });
 const Story = dynamic(() => import("@/components/Story"), { ssr: false });
@@ -27,6 +23,11 @@ const Vision = dynamic(() => import("@/components/Vision"), { ssr: false });
 const MoodFinderSection = dynamic(() => import("@/components/MoodFinderSection"), { ssr: false });
 const Philosophy = dynamic(() => import("@/components/Philosophy"), { ssr: false });
 const InstagramFeed = dynamic(() => import("@/components/InstagramFeed"), { ssr: false });
+const AmbientSound = dynamic(() => import("@/components/AmbientSound"), { ssr: false });
+const CustomCursor = dynamic(() => import("@/components/CustomCursor"), { ssr: false });
+const CommunitySection = dynamic(() => import("@/components/community/CommunitySection"), { ssr: false });
+const Footer = dynamic(() => import("@/components/Footer"), { ssr: false });
+const BeachPulseWidget = dynamic(() => import("@/components/BeachPulseWidget"), { ssr: false });
 
 /* ═══════════════════════════════════════════════════════════════
    MOQ DRINK — Page Assembly

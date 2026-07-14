@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { Manrope, Inter } from "next/font/google";
 import "./globals.css";
 
-// PERF-2: Explicit font-display:swap + preload for above-the-fold weights
+// PERF: Minimal font weights — only weights actually used in the design system
 const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700", "800"],
   display: "swap",
   preload: true,
 });
@@ -14,7 +14,7 @@ const manrope = Manrope({
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "600", "700", "800"],
   display: "swap",
   preload: true,
 });

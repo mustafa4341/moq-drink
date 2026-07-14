@@ -247,7 +247,7 @@ body {
 
 .type-hero {
   font-size: clamp(2.625rem, 6vw + 1rem, 6rem);
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 0.85;
   text-transform: uppercase;
@@ -255,7 +255,7 @@ body {
 
 .type-scene-title {
   font-size: clamp(2.25rem, 5vw + 0.5rem, 4.5rem);
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 0.90;
   text-transform: uppercase;
@@ -270,7 +270,7 @@ body {
 
 .type-label {
   font-size: clamp(0.5625rem, 0.5vw + 0.3rem, 0.625rem);
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: 0.25em;
   line-height: 1.0;
   text-transform: uppercase;
@@ -285,7 +285,7 @@ body {
 
 .type-button {
   font-size: clamp(0.625rem, 0.3vw + 0.5rem, 0.6875rem);
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: 0.2em;
   line-height: 1.0;
   text-transform: uppercase;
@@ -293,7 +293,7 @@ body {
 
 .type-card-title {
   font-size: clamp(0.875rem, 0.4vw + 0.6rem, 1rem);
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: 0.1em;
   line-height: 1.1;
   text-transform: uppercase;
@@ -309,7 +309,7 @@ body {
 /* Story scene — full-screen text */
 .type-story {
   font-size: clamp(3rem, 8vw + 1rem, 7rem);
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 0.85;
   text-transform: uppercase;

@@ -211,7 +211,6 @@ export default function Story() {
             alt="MOQ Brand Collage Background"
             fill
             className="object-cover object-center animate-fade-in"
-            priority
           />
         </div>
 
@@ -242,7 +241,6 @@ export default function Story() {
               alt="Blue Mojito Highlight"
               fill
               className="object-contain"
-              priority
               sizes="(max-width: 767px) 130px, 320px"
             />
           </div>
@@ -313,7 +311,7 @@ export default function Story() {
             "--particle-color-2": "rgba(220, 238, 255, 0.75)",
           } as React.CSSProperties}
         >
-          {[...Array(12)].map((_, i) => {
+          {[...Array(typeof window !== 'undefined' && window.innerWidth < 768 ? 4 : 12)].map((_, i) => {
             const size = 20 + (i % 3) * 8; // 20-36px for high visibility
             const delay = i * 0.8;
             const left = 5 + (i * 13) % 90;
@@ -417,34 +415,7 @@ export default function Story() {
         </div>
       </div>
 
-      {/* Scoped CSS Keyframes for GPU-accelerated micro-animations */}
-      <style jsx global>{`
-        @keyframes cloud-drift-slow {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(120vw); }
-        }
-        @keyframes cloud-drift-fast {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-120vw); }
-        }
-        @keyframes float-drink {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-15px) rotate(-1.5deg); }
-        }
-        @keyframes float-drink-delayed {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-15px) rotate(1.5deg); }
-        }
-        @keyframes palm-sway {
-          0%, 100% { transform: rotate(0deg) scale(1); }
-          50% { transform: rotate(4deg) scale(1.02); }
-        }
-        @keyframes leaf-fall {
-          0% { transform: translateY(-5vh) translateX(0) rotate(0deg); }
-          50% { transform: translateY(50vh) translateX(50px) rotate(180deg); }
-          100% { transform: translateY(105vh) translateX(100px) rotate(360deg); }
-        }
-      `}</style>
+      {/* Keyframes defined in globals.css — no duplicate <style> needed */}
     </section>
   );
 }
