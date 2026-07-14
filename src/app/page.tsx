@@ -11,6 +11,7 @@ import Hero from "@/components/Hero";
 import TransitionText from "@/components/TransitionText";
 import TasteJourney from "@/components/TasteJourney";
 import Footer from "@/components/Footer";
+import CommunitySection from "@/components/community/CommunitySection";
 import CustomCursor from "@/components/CustomCursor";
 import BeachPulseWidget from "@/components/BeachPulseWidget";
 import { useLenis } from "lenis/react";
@@ -26,7 +27,6 @@ const Vision = dynamic(() => import("@/components/Vision"), { ssr: false });
 const MoodFinderSection = dynamic(() => import("@/components/MoodFinderSection"), { ssr: false });
 const Philosophy = dynamic(() => import("@/components/Philosophy"), { ssr: false });
 const InstagramFeed = dynamic(() => import("@/components/InstagramFeed"), { ssr: false });
-const CommunitySection = dynamic(() => import("@/components/community/CommunitySection"), { ssr: false });
 
 /* ═══════════════════════════════════════════════════════════════
    MOQ DRINK — Page Assembly
